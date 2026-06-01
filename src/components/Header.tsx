@@ -1,5 +1,7 @@
-import { GraduationCap, Database, Flame, Wifi, RefreshCw } from 'lucide-react';
+import { Database, Flame, Wifi, RefreshCw } from 'lucide-react';
 import { User } from '../types';
+
+const schoolLogo = '/src/assets/images/logo_karapres_1780337245433.png';
 
 interface HeaderProps {
   currentUser: User | null;
@@ -27,8 +29,13 @@ export default function Header({
         {/* Logo & School Title */}
         <div className="flex items-center gap-4 select-none self-start md:self-auto">
           {/* Circular Shield Logo block */}
-          <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center p-1 shadow-md border border-red-100 shrink-0">
-            <GraduationCap className="w-7 h-7 text-red-700" />
+          <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center p-0.5 shadow-md border border-red-100 shrink-0 overflow-hidden">
+            <img 
+              src={schoolLogo} 
+              alt="Logo KARAPRES 3" 
+              referrerPolicy="no-referrer"
+              className="w-full h-full object-cover rounded-full"
+            />
           </div>
 
           <div>

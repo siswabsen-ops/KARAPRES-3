@@ -41,6 +41,7 @@ import KepsekPanel from './components/KepsekPanel';
 import GuruPanel from './components/GuruPanel';
 import PiketPanel from './components/PiketPanel';
 import WhatsAppSimulator from './components/WhatsAppSimulator';
+import ReportPanel from './components/ReportPanel';
 import {
   FileText,
   BookOpen,
@@ -49,7 +50,8 @@ import {
   HelpCircle,
   Smartphone,
   Database,
-  ArrowRight
+  ArrowRight,
+  FileSpreadsheet
 } from 'lucide-react';
 
 export default function App() {
@@ -104,7 +106,7 @@ export default function App() {
   });
 
   // Navigation tab for overall app modules
-  const [currentView, setCurrentView] = useState<'scan' | 'manajemen' | 'panduan'>('scan');
+  const [currentView, setCurrentView] = useState<'scan' | 'manajemen' | 'laporan' | 'panduan'>('scan');
 
   // Trigger sync state variables
   const [isSyncing, setIsSyncing] = useState(false);
@@ -583,6 +585,19 @@ export default function App() {
               Halaman Manajemen ({currentUser ? currentUser.role.toUpperCase() : 'Login'})
             </button>
 
+            {/* Tab 2.5: Rekap Laporan */}
+            <button
+              onClick={() => setCurrentView('laporan')}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+                currentView === 'laporan'
+                  ? 'bg-red-700 text-white shadow-md'
+                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+              }`}
+            >
+              <FileSpreadsheet className="w-4 h-4" />
+              Laporan & Rekapitulasi
+            </button>
+
             {/* Tab 3: Panduan Sistem */}
             <button
               onClick={() => setCurrentView('panduan')}
@@ -673,6 +688,13 @@ export default function App() {
                 )}
               </>
             )}
+          </div>
+        )}
+
+        {/* VIEW 2.5: REKAP LAPORAN */}
+        {currentView === 'laporan' && (
+          <div className="py-2">
+            <ReportPanel siswaList={siswaList} presensiList={presensiList} />
           </div>
         )}
 
