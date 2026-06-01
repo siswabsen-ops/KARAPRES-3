@@ -17,6 +17,15 @@ export interface Siswa {
   waOrangTua: string; // Format Indonesia, misal: "081234567890" atau "628..."
 }
 
+export const DAFTAR_KELAS = [
+  'Kelas 1-A', 'Kelas 1-B',
+  'Kelas 2-A', 'Kelas 2-B',
+  'Kelas 3-A', 'Kelas 3-B',
+  'Kelas 4-A', 'Kelas 4-B',
+  'Kelas 5-A', 'Kelas 5-B',
+  'Kelas 6-A', 'Kelas 6-B'
+];
+
 export type StatusKehadiran = 'Hadir' | 'Sakit' | 'Izin' | 'Alfa' | 'Terlambat';
 
 export interface Presensi {

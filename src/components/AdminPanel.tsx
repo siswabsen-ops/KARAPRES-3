@@ -16,8 +16,8 @@ import {
   ChevronRight,
   UserCheck
 } from 'lucide-react';
-import { Siswa, SystemSettings, ActivityLog, User, Role } from '../types';
-import BarcodeRenderer from './BarcodeRenderer';
+import { Siswa, SystemSettings, ActivityLog, User, Role, DAFTAR_KELAS } from '../types';
+import QRCodeRenderer from './QRCodeRenderer';
 
 interface AdminPanelProps {
   siswaList: Siswa[];
@@ -72,7 +72,7 @@ export default function AdminPanel({
   const [isEditingSiswa, setIsEditingSiswa] = useState<string | null>(null); // Siswa ID
   const [nis, setNis] = useState('');
   const [nama, setNama] = useState('');
-  const [kelas, setKelas] = useState('Kelas 1');
+  const [kelas, setKelas] = useState('Kelas 1-A');
   const [jk, setJk] = useState<'L' | 'P'>('L');
   const [waOrangTua, setWaOrangTua] = useState('');
 
@@ -163,7 +163,7 @@ export default function AdminPanel({
     setAccountNamaLengkap('');
     setAccountRole('piket');
     setAccountPin('');
-    setAccountKelasSpesifik('Kelas 1');
+    setAccountKelasSpesifik('Kelas 1-A');
     setIsAddingNewAccount(false);
   };
 
@@ -173,7 +173,7 @@ export default function AdminPanel({
     setAccountNamaLengkap(acc.user.namaLengkap);
     setAccountRole(acc.user.role);
     setAccountPin(acc.pin);
-    setAccountKelasSpesifik(acc.user.role === 'guru' ? (acc.user.kelasSpesifik || 'Kelas 1') : 'Kelas 1');
+    setAccountKelasSpesifik(acc.user.role === 'guru' ? (acc.user.kelasSpesifik || 'Kelas 1-A') : 'Kelas 1-A');
     setIsAddingNewAccount(false);
   };
 
@@ -212,7 +212,7 @@ export default function AdminPanel({
     // Reset Form
     setNis('');
     setNama('');
-    setKelas('Kelas 1');
+    setKelas('Kelas 1-A');
     setJk('L');
     setWaOrangTua('');
   };
@@ -231,7 +231,7 @@ export default function AdminPanel({
     setIsEditingSiswa(null);
     setNis('');
     setNama('');
-    setKelas('Kelas 1');
+    setKelas('Kelas 1-A');
     setJk('L');
     setWaOrangTua('');
   };
@@ -484,9 +484,9 @@ export default function AdminPanel({
                         onChange={(e) => setKelas(e.target.value)}
                         className="w-full bg-white border border-gray-300 rounded-xl py-1.5 px-3 text-xs focus:outline-none focus:ring-2 focus:ring-red-750 font-semibold text-slate-700"
                       >
-                        {Array.from({ length: 6 }).map((_, i) => (
-                          <option key={i} value={`Kelas ${i + 1}`}>
-                            Kelas {i + 1}
+                        {DAFTAR_KELAS.map((k) => (
+                          <option key={k} value={k}>
+                            {k}
                           </option>
                         ))}
                       </select>
@@ -571,9 +571,9 @@ export default function AdminPanel({
                     </div>
 
                     <div className="max-w-[280px] mx-auto p-4 bg-slate-50 border border-slate-200 rounded-2xl">
-                      {/* Virtual Code 39 canvas container target inside print frame */}
-                      <div id="barcode-print-canvas-area">
-                        <BarcodeRenderer value={selectedPrintSiswa.nis} />
+                      {/* Virtual QR Code canvas container target inside print frame */}
+                      <div id="qrcode-print-canvas-area">
+                        <QRCodeRenderer value={selectedPrintSiswa.nis} />
                       </div>
                       
                       <div className="mt-3">
@@ -585,17 +585,17 @@ export default function AdminPanel({
                     </div>
 
                     <p className="text-[10px] text-gray-500 leading-normal">
-                      Gunakan tombol cetak di bawah untuk mencetak kartu ini dengan ukuran pas 10x6cm, tempel pada gantungan kartu siswa!
+                      Gunakan tombol cetak di bawah untuk mencetak kartu ini dengan ukuran pas, tempel pada gantungan kartu siswa!
                     </p>
 
                     <button
                       type="button"
-                      id="btn-print-barcode"
-                      onClick={() => triggerPrintWindow('barcode-print-canvas-area')}
+                      id="btn-print-qrcode"
+                      onClick={() => triggerPrintWindow('qrcode-print-canvas-area')}
                       className="inline-flex items-center gap-1.5 bg-rose-600 hover:bg-rose-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow cursor-pointer"
                     >
                       <Printer className="w-4 h-4" />
-                      Cetak Kartu Siswa & Barcode
+                      Cetak Kartu Siswa & QR Code
                     </button>
                   </div>
                 ) : null}
@@ -638,7 +638,7 @@ export default function AdminPanel({
                             id={`btn-target-print-siswa-${siswa.nis}`}
                             onClick={() => setSelectedPrintSiswa(siswa)}
                             className="bg-sky-50 text-sky-600 hover:bg-sky-100 border border-sky-200 p-1.5 rounded-lg transition-colors cursor-pointer"
-                            title="Generate barcode cetak"
+                            title="Generate QR Code cetak"
                           >
                             <Printer className="w-3.5 h-3.5" />
                           </button>
@@ -684,13 +684,12 @@ export default function AdminPanel({
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {Array.from({ length: 6 }).map((_, idx) => {
-                  const targetKelas = `Kelas ${idx + 1}`;
+                {DAFTAR_KELAS.map((targetKelas) => {
                   const countSiswa = siswaList.filter((s) => s.kelas === targetKelas).length;
                   const filterSiswa = siswaList.filter((s) => s.kelas === targetKelas);
 
                   return (
-                    <div key={idx} className="p-4 bg-slate-50 border border-gray-200 rounded-2xl flex flex-col justify-between">
+                    <div key={targetKelas} className="p-4 bg-slate-50 border border-gray-200 rounded-2xl flex flex-col justify-between">
                       <div>
                         <div className="flex justify-between items-start">
                           <span className="text-sm font-black text-rose-600">{targetKelas}</span>
@@ -1257,12 +1256,9 @@ export default function AdminPanel({
                             onChange={(e) => setAccountKelasSpesifik(e.target.value)}
                             className="w-full bg-white border border-slate-300 rounded-xl py-2 px-3 text-xs font-bold focus:ring-2 focus:ring-red-700 shadow-2xs text-slate-700 focus:outline-none"
                           >
-                            <option value="Kelas 1">Kelas 1</option>
-                            <option value="Kelas 2">Kelas 2</option>
-                            <option value="Kelas 3">Kelas 3</option>
-                            <option value="Kelas 4">Kelas 4</option>
-                            <option value="Kelas 5">Kelas 5</option>
-                            <option value="Kelas 6">Kelas 6</option>
+                            {DAFTAR_KELAS.map((k) => (
+                              <option key={k} value={k}>{k}</option>
+                            ))}
                             <option value="Semua Kelas">Semua Kelas</option>
                           </select>
                         </div>

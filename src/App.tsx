@@ -8,6 +8,22 @@ import {
 } from './lib/demoData';
 import { Siswa, Presensi, SystemSettings, ActivityLog, User } from './types';
 import Header from './components/Header';
+import { 
+  db,
+  ensureAuthenticated, 
+  saveSiswaToFirestore, 
+  deleteSiswaFromFirestore, 
+  savePresensiToFirestore, 
+  deletePresensiFromFirestore, 
+  clearPresensiInFirestore, 
+  saveAccountToFirestore, 
+  deleteAccountFromFirestore, 
+  saveSettingsToFirestore, 
+  saveActivityLogToFirestore, 
+  clearActivityLogsInFirestore,
+  seedInitialDataIfDocsEmpty
+} from './lib/firebase';
+import { onSnapshot, collection, doc } from 'firebase/firestore';
 import {
   googleSignIn,
   logoutGoogle,
@@ -125,6 +141,110 @@ export default function App() {
     };
   }, []);
 
+  // Real-time Cloud Firestore live data synchronizer
+  useEffect(() => {
+    const startRealTimeSync = async () => {
+      try {
+        await ensureAuthenticated();
+        
+        // Non-blocking mass-data seeder if Firestore is freshly provisioned
+        await seedInitialDataIfDocsEmpty(
+          SISWA_INITIAL,
+          USER_DEMO_ACCOUNTS,
+          SETTINGS_INITIAL,
+          LOGS_INITIAL
+        );
+
+        // 1. Subscribe to Siswa directory
+        const unsubSiswa = onSnapshot(collection(db, 'siswa'), (snap) => {
+          const list: Siswa[] = [];
+          snap.forEach((doc) => {
+            list.push(doc.data() as Siswa);
+          });
+          if (list.length > 0) {
+            setSiswaList(list);
+          }
+        }, (err) => {
+          console.error('Real-time Siswa sync fail:', err);
+        });
+
+        // 2. Subscribe to Attendance records
+        const unsubPresensi = onSnapshot(collection(db, 'presensi'), (snap) => {
+          const list: Presensi[] = [];
+          snap.forEach((doc) => {
+            list.push(doc.data() as Presensi);
+          });
+          setPresensiList(list);
+        }, (err) => {
+          console.error('Real-time Presensi sync fail:', err);
+        });
+
+        // 3. Subscribe to Accounts directory
+        const unsubAccounts = onSnapshot(collection(db, 'accounts'), (snap) => {
+          const list: { user: User; pin: string }[] = [];
+          snap.forEach((doc) => {
+            const d = doc.data();
+            list.push({
+              user: {
+                id: d.id,
+                username: d.username,
+                namaLengkap: d.namaLengkap,
+                role: d.role,
+                kelasSpesifik: d.kelasSpesifik || undefined
+              },
+              pin: d.pin
+            });
+          });
+          if (list.length > 0) {
+            setAccountsList(list);
+          }
+        }, (err) => {
+          console.error('Real-time Accounts sync fail:', err);
+        });
+
+        // 4. Subscribe to App settings
+        const unsubSettings = onSnapshot(doc(db, 'settings', 'system'), (docSnap) => {
+          if (docSnap.exists()) {
+            setSettings(docSnap.data() as SystemSettings);
+          }
+        }, (err) => {
+          console.error('Real-time Settings sync fail:', err);
+        });
+
+        // 5. Subscribe to Activity logs
+        const unsubLogs = onSnapshot(collection(db, 'activityLogs'), (snap) => {
+          const list: ActivityLog[] = [];
+          snap.forEach((doc) => {
+            list.push(doc.data() as ActivityLog);
+          });
+          list.sort((a, b) => new Date(b.waktu).getTime() - new Date(a.waktu).getTime());
+          setActivityLogs(list);
+        }, (err) => {
+          console.error('Real-time Logs sync fail:', err);
+        });
+
+        return () => {
+          unsubSiswa();
+          unsubPresensi();
+          unsubAccounts();
+          unsubSettings();
+          unsubLogs();
+        };
+      } catch (error) {
+        console.error('Firestore connection initialization skipped or failed:', error);
+      }
+    };
+
+    let unsubFuncs: (() => void) | undefined;
+    startRealTimeSync().then((cleaner) => {
+      unsubFuncs = cleaner;
+    });
+
+    return () => {
+      if (unsubFuncs) unsubFuncs();
+    };
+  }, []);
+
   // Sync state modifications to Web Storage
   useEffect(() => {
     localStorage.setItem('karapres3_siswa', JSON.stringify(siswaList));
@@ -164,32 +284,22 @@ export default function App() {
       tindakan,
       detail,
     };
-    setActivityLogs((prev) => [...prev, newLog]);
+    saveActivityLogToFirestore(newLog);
   };
 
   const handleUpdateAccount = (userId: string, updatedUser: Partial<User>, newPin?: string) => {
-    setAccountsList(prev => {
-      return prev.map(acc => {
-        if (acc.user.id === userId) {
-          const newUser = { ...acc.user, ...updatedUser };
-          // If editing self, update active currentUser context
-          if (currentUser && currentUser.id === userId) {
-            setCurrentUser(newUser);
-          }
-          return {
-            user: newUser,
-            pin: newPin !== undefined ? newPin : acc.pin
-          };
-        }
-        return acc;
-      });
-    });
-    addActivityLog('Update Akun', `Merubah detail profil akun: ${updatedUser.namaLengkap || userId}`);
-    triggerNotice('Akun berhasil diperbarui.', 'success');
+    const old = accountsList.find(acc => acc.user.id === userId);
+    if (old) {
+      const mergedUser = { ...old.user, ...updatedUser };
+      const mergedPin = newPin !== undefined ? newPin : old.pin;
+      saveAccountToFirestore({ user: mergedUser, pin: mergedPin });
+      addActivityLog('Update Akun', `Merubah detail profil akun: ${updatedUser.namaLengkap || userId}`);
+      triggerNotice('Akun berhasil diperbarui.', 'success');
+    }
   };
 
   const handleAddAccount = (user: User, pin: string) => {
-    setAccountsList(prev => [...prev, { user, pin }]);
+    saveAccountToFirestore({ user, pin });
     addActivityLog('Tambah Akun Baru', `Membuat akun operator baru: ${user.namaLengkap} [${user.role.toUpperCase()}]`);
     triggerNotice('Akun baru berhasil ditambahkan.', 'success');
   };
@@ -199,7 +309,7 @@ export default function App() {
       triggerNotice('Tidak dapat menghapus akun Anda sendiri!', 'info');
       return;
     }
-    setAccountsList(prev => prev.filter(acc => acc.user.id !== userId));
+    deleteAccountFromFirestore(userId);
     addActivityLog('Hapus Akun', `Menghapus akun operator ID: ${userId}`);
     triggerNotice('Akun berhasil dihapus.', 'success');
   };
@@ -389,18 +499,18 @@ export default function App() {
 
   // Student CRUD actions
   const handleAddSiswa = (newSiswa: Siswa) => {
-    setSiswaList((prev) => [...prev, newSiswa]);
+    saveSiswaToFirestore(newSiswa);
     addActivityLog('Menambah Siswa', `Mendaftarkan siswa baru: ${newSiswa.nama} (NIS ${newSiswa.nis}) di ${newSiswa.kelas}`);
   };
 
   const handleUpdateSiswa = (updated: Siswa) => {
-    setSiswaList((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
+    saveSiswaToFirestore(updated);
     addActivityLog('Update Siswa', `Mengubah data profil: ${updated.nama} (NIS ${updated.nis})`);
   };
 
   const handleDeleteSiswa = (id: string) => {
     const matched = siswaList.find((s) => s.id === id);
-    setSiswaList((prev) => prev.filter((s) => s.id !== id));
+    deleteSiswaFromFirestore(id);
     if (matched) {
       addActivityLog('Hapus Siswa', `Menghapus pendaftaran: ${matched.nama} (NIS ${matched.nis})`);
     }
@@ -408,26 +518,19 @@ export default function App() {
 
   // Settings Save action
   const handleSaveSettings = (newSettings: SystemSettings) => {
-    setSettings(newSettings);
+    saveSettingsToFirestore(newSettings);
     addActivityLog('Konfigurasi Diperbarui', 'Mengubah konfigurasi jam masuk, template WA, atau ID integrasi Google.');
   };
 
   // Record a scanned attendance
   const handleAddPresensi = (newPresensi: Presensi) => {
-    // Append or replace today if double trigger manual override occurs
-    setPresensiList((prev) => {
-      const filtered = prev.filter(
-        (p) => !(p.siswaId === newPresensi.siswaId && p.tanggal === newPresensi.tanggal)
-      );
-      return [...filtered, newPresensi];
-    });
-
+    savePresensiToFirestore(newPresensi);
     addActivityLog('Presensi Berhasil', `Mencatat status [${newPresensi.status}] untuk ${newPresensi.nama} (${newPresensi.kelas})`);
   };
 
   // Quick reset logs
   const handleClearLogs = () => {
-    setActivityLogs(LOGS_INITIAL);
+    clearActivityLogsInFirestore(activityLogs);
     triggerNotice('Log jejak aktivitas audit sistem berhasil dibersihkan.');
   };
 
@@ -462,7 +565,7 @@ export default function App() {
               }`}
             >
               <Camera className="w-4 h-4" />
-              Presensi Scan Barcode
+              Presensi Scan QR Code
             </button>
 
             {/* Tab 2: Manajemen Console */}
@@ -587,7 +690,7 @@ export default function App() {
                   Panduan Setup & Pengoperasian Aplikasi KARAPRES 3
                 </h2>
                 <p className="text-gray-500 text-xs mt-1.5">
-                  Langkah-langkah lengkap untuk mengoperasikan presensi berbasis barcode & notifikasi WhatsApp otomatis di SDN 3 Karamatwangi, Cisurupan, Garut.
+                  Langkah-langkah lengkap untuk mengoperasikan presensi berbasis QR Code & notifikasi WhatsApp otomatis di SDN 3 Karamatwangi, Cisurupan, Garut.
                 </p>
               </div>
 
@@ -595,18 +698,18 @@ export default function App() {
               <div className="space-y-3">
                 <h3 className="font-extrabold text-sm text-slate-800 flex items-center gap-2">
                   <span className="w-6 h-6 rounded-full bg-rose-600 text-white flex items-center justify-center font-bold text-xs select-none">1</span>
-                  Metode Pembuatan Barcode Siswa
+                  Metode Pembuatan QR Code Siswa
                 </h3>
                 <div className="text-xs text-gray-600 space-y-2 pl-8 leading-relaxed">
                   <p>
-                    Setiap siswa yang terdaftar di dalam database memiliki <b>Nomor Induk Siswa (NIS)</b> yang unik. NIS ini dikodekan menjadi representasi grafis vertikal berupa Barcode standar format <b>Code 39</b>.
+                    Setiap siswa yang terdaftar di dalam database memiliki <b>Nomor Induk Siswa (NIS)</b> yang unik. NIS ini dikodekan menjadi representasi grafis berupa QR Code dua dimensi yang modern dan andal.
                   </p>
                   <ol className="list-decimal list-inside space-y-1.5 text-gray-500 pl-2">
                     <li>Masuk ke dalam aplikasi sebagai akun <b>ADMIN</b> (PIN: 1234).</li>
                     <li>Buka menu <b>Pengelolaan Siswa</b> yang terletak di sebelah kiri.</li>
                     <li>Pada baris data murid yang ingin dibuatkan kartunya, klik logo **Cetak Kartu** berbentuk <code>Printer</code>.</li>
-                    <li>Aplikasi secara otomatis me-render canvas grafis <b>Barcode Code 39</b> yang presisi sesuai NIS murid tersebut secara instan tanpa butuh paket internet.</li>
-                    <li>Klik tombol merah <b>Cetak Kartu Siswa & Barcode</b> untuk mencetak langsung ke kertas karton/ID Card lewat printer inkjet sekolah, atau klik <b>Unduh PNG</b> untuk menyimpan filenya.</li>
+                    <li>Aplikasi secara otomatis me-render canvas grafis <b>QR Code</b> yang presisi sesuai NIS murid tersebut secara instan tanpa butuh paket internet.</li>
+                    <li>Klik tombol merah <b>Cetak Kartu Siswa & QR Code</b> untuk mencetak langsung ke kertas karton/ID Card lewat printer inkjet sekolah, atau klik <b>Unduh PNG</b> untuk menyimpan filenya.</li>
                   </ol>
                 </div>
               </div>
@@ -639,7 +742,7 @@ export default function App() {
                 </h3>
                 <div className="text-xs text-gray-600 space-y-2 pl-8 leading-relaxed">
                   <p>
-                    Notifikasi orang tua dikirimkan otomatis ketika barcode terdeteksi.
+                    Notifikasi orang tua dikirimkan otomatis ketika QR Code terdeteksi.
                   </p>
                   <ol className="list-decimal list-inside space-y-1 text-gray-500 pl-2">
                     <li>Gunakan panel samping hijau <b>WA Gateway</b> di pojok kanan bawah untuk memantau simulasi pengantaran pesan secara real-time.</li>
@@ -697,7 +800,7 @@ export default function App() {
                   <div className="bg-slate-50 p-3 rounded-2xl border border-gray-150">
                     <span className="font-black text-[10px] text-emerald-600 uppercase">🔑 GURU KELAS (WALI KELAS)</span>
                     <p className="text-gray-500 text-[11px] mt-1">
-                      Khusus memegang kontrol kelas yang diampunya (Siti Patimah memegang Kelas 4). Dapat mengubah status murid yang tidak hadir dari gerbang akibat ada keterangan tertulis, seperti sakit atau ijin resmi, sehingga pencatatan harian presisi.
+                      Khusus memegang kontrol kelas yang diampunya (Siti Patimah memegang Kelas 4-A). Dapat mengubah status murid yang tidak hadir dari gerbang akibat ada keterangan tertulis, seperti sakit atau ijin resmi, sehingga pencatatan harian presisi.
                     </p>
                   </div>
 
@@ -705,7 +808,7 @@ export default function App() {
                   <div className="bg-slate-50 p-3 rounded-2xl border border-gray-150">
                     <span className="font-black text-[10px] text-amber-600 uppercase">🔑 PETUGAS PIKET</span>
                     <p className="text-gray-500 text-[11px] mt-1">
-                      Mengoperasikan alat pindai di pagi hari di gerbang utama sekolah. Mengaktifkan kamera HP, memajang scanner laser di depan barcode kartu siswa, dan melacak riwayat absensi cepat yang masuk.
+                      Mengoperasikan alat pindai di pagi hari di gerbang utama sekolah. Mengaktifkan kamera HP, mengarahkan scanner ke depan QR Code kartu siswa, dan melacak riwayat absensi cepat yang masuk.
                     </p>
                   </div>
 
@@ -726,7 +829,7 @@ export default function App() {
           <div className="text-center md:text-left">
             <p className="font-bold text-slate-200">SDN 3 Karamatwangi, Cisurupan, Garut</p>
             <p className="text-[10px] text-slate-500 mt-1">
-              Sistem Absensi Barcode Terpadu "KARAPRES 3" v2.1.0-WEB • Digarap Kokoh Bebas Bug
+              Sistem Absensi QR Code Terpadu "KARAPRES 3" v2.1.0-WEB • Digarap Kokoh Bebas Bug
             </p>
           </div>
           <div className="flex gap-4">
@@ -779,7 +882,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => {
-                  setPresensiList([]);
+                  clearPresensiInFirestore(presensiList);
                   addActivityLog('Reset Presensi', 'Melakukan pembersihan total riwayat presensi hari ini.');
                   setShowClearPresensiConfirm(false);
                   triggerNotice('Semua data presensi harian berhasil diset ulang.');

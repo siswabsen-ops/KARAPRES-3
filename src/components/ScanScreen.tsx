@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Camera, Search, UserCheck, AlertTriangle, Clock, Smartphone, MessageCircle, RefreshCw, Star } from 'lucide-react';
 import { Siswa, Presensi, SystemSettings, StatusKehadiran } from '../types';
-import BarcodeRenderer from './BarcodeRenderer';
+import QRCodeRenderer from './QRCodeRenderer';
 
 interface ScanScreenProps {
   siswaList: Siswa[];
@@ -180,10 +180,10 @@ export default function ScanScreen({
             <div>
               <h3 className="text-lg font-black text-slate-800 tracking-tight flex items-center gap-2 font-display">
                 <Camera className="w-5 h-5 text-red-750 animate-pulse" />
-                Pindai Barcode Kartu Siswa
+                Pindai QR Code Kartu Siswa
               </h3>
               <p className="text-xs text-slate-500">
-                Posisikan barcode kartu siswa di depan kamera HP / Laptop secara lurus.
+                Posisikan QR Code kartu siswa di depan kamera HP / Laptop secara lurus.
               </p>
             </div>
             
@@ -239,7 +239,7 @@ export default function ScanScreen({
                 <div>
                   <h4 className="font-bold text-slate-200 text-sm font-display">KAMERA MASIH NONAKTIF</h4>
                   <p className="text-[11px] text-slate-400 leading-relaxed mt-1">
-                    Aktifkan kamera untuk mulai memindai barcode fisik siswa secara otomatis.
+                    Aktifkan kamera untuk mulai memindai QR Code fisik siswa secara otomatis.
                   </p>
                 </div>
                 <button
@@ -376,7 +376,7 @@ export default function ScanScreen({
             <span className="text-[9px] bg-red-50 text-red-700 px-2 py-0.5 rounded font-bold font-mono uppercase">Interactive Demo</span>
           </div>
           <p className="text-xs text-gray-500 leading-relaxed mb-4">
-            Untuk menguji aliran sistem <b>KARAPRES 3</b> tanpa printer scan barcode fisik, klik salah satu kartu siswa virtual di bawah ini untuk mensimulasikan pemindaian laser barcode secara otomatis!
+            Untuk menguji aliran sistem <b>KARAPRES 3</b> tanpa printer scan QR Code fisik, klik salah satu kartu siswa virtual di bawah ini untuk mensimulasikan pemindaian laser QR Code secara otomatis!
           </p>
 
           {/* Interactive Virtual Students Card Matrix */}
@@ -413,26 +413,28 @@ export default function ScanScreen({
                     </div>
                   </div>
 
-                  {/* Micro Barcode preview + click scanner simulation */}
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <div className="opacity-70 group-hover:opacity-100 transition-opacity">
-                      {/* Barcode line representation mockup */}
-                      <div className="w-16 h-7 bg-white p-0.5 flex flex-col justify-center items-center border border-gray-250 rounded">
-                        <div className="flex gap-[1px] h-4 w-full justify-center">
-                          <span className="w-0.5 bg-black" />
-                          <span className="w-1 bg-black" />
-                          <span className="w-0.5 bg-transparent" />
-                          <span className="w-0.5 bg-black" />
-                          <span className="w-[1.5px] bg-black" />
-                          <span className="w-[2px] bg-black" />
-                          <span className="w-0.5 bg-transparent" />
-                          <span className="w-1 bg-black" />
-                          <span className="w-0.5 bg-black" />
-                          <span className="w-0.5 bg-transparent" />
-                          <span className="w-[1.5px] bg-black" />
-                          <span className="w-0.5 bg-black" />
+                  {/* Micro QR Code preview + click scanner simulation */}
+                  <div className="flex items-center gap-2 shrink-0">
+                    <div className="opacity-70 group-hover:opacity-100 transition-all duration-300">
+                      {/* CSS QR Code mockup icon */}
+                      <div className="w-8 h-8 bg-white p-1 flex items-center justify-center border border-slate-250 rounded-lg shadow-inner select-none pointer-events-none">
+                        <div className="w-full h-full relative">
+                          {/* Anchor Top-Left */}
+                          <span className="w-2.5 h-2.5 border-2 border-slate-900 rounded-[1px] absolute top-0 left-0 flex items-center justify-center">
+                            <span className="w-1 h-1 bg-slate-900 rounded-[1px]" />
+                          </span>
+                          {/* Anchor Top-Right */}
+                          <span className="w-2.5 h-2.5 border-2 border-slate-900 rounded-[1px] absolute top-0 right-0 flex items-center justify-center">
+                            <span className="w-1 h-1 bg-slate-900 rounded-[1px]" />
+                          </span>
+                          {/* Anchor Bottom-Left */}
+                          <span className="w-2.5 h-2.5 border-2 border-slate-900 rounded-[1px] absolute bottom-0 left-0 flex items-center justify-center">
+                            <span className="w-1 h-1 bg-slate-900 rounded-[1px]" />
+                          </span>
+                          {/* Dots */}
+                          <span className="w-1 h-1 bg-slate-900 absolute bottom-1 right-1 rounded-[0.5px]" />
+                          <span className="w-1 h-1 bg-slate-900 absolute bottom-0 right-0 rounded-[0.5px]" />
                         </div>
-                        <span className="text-[5px] font-mono leading-none tracking-tight">NIS {siswa.nis}</span>
                       </div>
                     </div>
 
@@ -447,7 +449,7 @@ export default function ScanScreen({
                             ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
                             : 'bg-red-700 hover:bg-red-800 text-white shadow-sm'
                         }`}
-                        title="Simulasikan Scan Barcode otomatis untuk murid ini"
+                        title="Simulasikan Scan QR Code otomatis untuk murid ini"
                       >
                         {presentToday ? `${presentToday.status}` : 'Pindai'}
                       </button>

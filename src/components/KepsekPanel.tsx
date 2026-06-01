@@ -11,7 +11,7 @@ import {
   AlertTriangle,
   Award
 } from 'lucide-react';
-import { Siswa, Presensi } from '../types';
+import { Siswa, Presensi, DAFTAR_KELAS } from '../types';
 
 interface KepsekPanelProps {
   siswaList: Siswa[];
@@ -206,9 +206,9 @@ export default function KepsekPanel({ siswaList, presensiList }: KepsekPanelProp
               className="bg-white border border-gray-300 rounded-xl py-1.5 px-3 text-xs focus:outline-none focus:ring-2 focus:ring-red-700 font-semibold text-slate-700"
             >
               <option value="Semua Kelas">Semua Kelas 1-6</option>
-              {Array.from({ length: 6 }).map((_, i) => (
-                <option key={i} value={`Kelas ${i + 1}`}>
-                  Kelas {i + 1}
+              {DAFTAR_KELAS.map((k) => (
+                <option key={k} value={k}>
+                  {k}
                 </option>
               ))}
             </select>
@@ -275,26 +275,26 @@ export default function KepsekPanel({ siswaList, presensiList }: KepsekPanelProp
           </h3>
 
           <div className="space-y-3 pt-2">
-            {Array.from({ length: 6 }).map((_, idx) => {
-              const curKelasName = `Kelas ${idx + 1}`;
+            {DAFTAR_KELAS.map((curKelasName) => {
               const totalPupils = siswaList.filter((s) => s.kelas === curKelasName).length;
               const hasScannedInKelas = presensiList.filter((p) => p.kelas === curKelasName && p.tanggal === todayStr && (p.status === 'Hadir' || p.status === 'Terlambat')).length;
 
               // Ratio representation
               const ratioPercent = totalPupils > 0 
-                ? Math.min(100, Math.round((hasScannedInKelas / totalPupils) * 100)) 
+                ? Math.min(100, Math.round((hasScannedInKelas / totalPupils) * 105)) 
                 : 0;
+              const safePercent = Math.min(100, ratioPercent);
 
               return (
-                <div key={idx} className="space-y-1">
+                <div key={curKelasName} className="space-y-1">
                   <div className="flex justify-between items-center text-xs">
                     <span className="font-bold text-slate-700">{curKelasName} ({totalPupils} Siswa)</span>
-                    <span className="font-mono font-black text-red-700">{ratioPercent}% Hadir</span>
+                    <span className="font-mono font-black text-red-700">{safePercent}% Hadir</span>
                   </div>
                   <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden border border-slate-200">
                     <div 
                       className="bg-red-700 h-full rounded-full transition-all duration-300" 
-                      style={{ width: `${ratioPercent}%` }} 
+                      style={{ width: `${safePercent}%` }} 
                     />
                   </div>
                 </div>

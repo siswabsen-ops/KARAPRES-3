@@ -26,7 +26,7 @@ export const USER_DEMO_ACCOUNTS: { user: User; pin: string }[] = [
       username: 'guru4',
       namaLengkap: 'Siti Patimah, S.Pd.',
       role: 'guru',
-      kelasSpesifik: 'Kelas 4'
+      kelasSpesifik: 'Kelas 4-A'
     },
     pin: '3333'
   },
@@ -41,7 +41,26 @@ export const USER_DEMO_ACCOUNTS: { user: User; pin: string }[] = [
   }
 ];
 
-export const SISWA_INITIAL: Siswa[] = realStudents as Siswa[];
+export const SISWA_INITIAL: Siswa[] = (realStudents as any[]).map((s) => {
+  let mappedKelas = s.kelas || 'Kelas 1-A';
+  const m = mappedKelas.match(/Kelas\s*(\d)\s*-?\s*([A-Za-z])/i);
+  if (m) {
+    mappedKelas = `Kelas ${m[1]}-${m[2].toUpperCase()}`;
+  } else {
+    const m2 = mappedKelas.match(/Kelas\s*(\d)/i);
+    if (m2) {
+      mappedKelas = `Kelas ${m2[1]}-A`;
+    }
+  }
+  return {
+    id: s.id,
+    nis: s.nis,
+    nama: s.nama,
+    kelas: mappedKelas,
+    jenisKelamin: s.jenisKelamin,
+    waOrangTua: s.waOrangTua
+  };
+});
 
 export const SETTINGS_INITIAL: SystemSettings = {
   jamMasuk: '07:00',
@@ -86,7 +105,7 @@ export const LOGS_INITIAL: ActivityLog[] = [
     user: 'Cecep Mulyana',
     role: 'piket',
     tindakan: 'Inisialisasi Kamera',
-    detail: 'Kamera Barcode Scanner berhasil aktif, status siap memindai.'
+    detail: 'Kamera QR Code Scanner berhasil aktif, status siap memindai.'
   }
 ];
 
@@ -96,7 +115,7 @@ export const PRESENSI_INITIAL: Presensi[] = [
     siswaId: 'sis-001',
     nis: '30101',
     nama: 'Aceng Miftah',
-    kelas: 'Kelas 1',
+    kelas: 'Kelas 1-B',
     tanggal: '2026-06-01',
     waktu: '06:52:10',
     status: 'Hadir',
@@ -109,7 +128,7 @@ export const PRESENSI_INITIAL: Presensi[] = [
     siswaId: 'sis-003',
     nis: '30201',
     nama: 'Dadan Wildan',
-    kelas: 'Kelas 2',
+    kelas: 'Kelas 2-B',
     tanggal: '2026-06-01',
     waktu: '06:55:40',
     status: 'Hadir',
@@ -122,7 +141,7 @@ export const PRESENSI_INITIAL: Presensi[] = [
     siswaId: 'sis-008',
     nis: '30402',
     nama: 'Ayu Lestari',
-    kelas: 'Kelas 4',
+    kelas: 'Kelas 4-A',
     tanggal: '2026-06-01',
     waktu: '07:05:12',
     status: 'Hadir',
@@ -135,7 +154,7 @@ export const PRESENSI_INITIAL: Presensi[] = [
     siswaId: 'sis-010',
     nis: '30501',
     nama: 'Iman Sulaeman',
-    kelas: 'Kelas 5',
+    kelas: 'Kelas 5-A',
     tanggal: '2026-06-01',
     waktu: '07:18:22',
     status: 'Terlambat',
@@ -148,7 +167,7 @@ export const PRESENSI_INITIAL: Presensi[] = [
     siswaId: 'sis-013',
     nis: '30602',
     nama: 'Dewi Sartika',
-    kelas: 'Kelas 6',
+    kelas: 'Kelas 6-B',
     tanggal: '2026-06-01',
     waktu: '07:22:05',
     status: 'Terlambat',

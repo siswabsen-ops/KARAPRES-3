@@ -126,7 +126,7 @@ Terima kasih atas perhatian dan kerja samanya.`;
                 </span>
                 <p className="text-gray-700 font-medium text-xs">Belum ada Presensi Hari Ini</p>
                 <p className="text-gray-500 text-[11px] mt-1">
-                  Saat barcode siswa dipindai, notifikasi pengiriman pesan WhatsApp ke orang tua otomatis terpantau di sini.
+                  Saat QR Code siswa dipindai, notifikasi pengiriman pesan WhatsApp ke orang tua otomatis terpantau di sini.
                 </p>
               </div>
             ) : (

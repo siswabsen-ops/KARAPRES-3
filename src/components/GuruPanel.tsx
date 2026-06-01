@@ -24,7 +24,7 @@ export default function GuruPanel({
   currentUser,
   onAddPresensi,
 }: GuruPanelProps) {
-  const targetedKelas = currentUser.kelasSpesifik || 'Kelas 4';
+  const targetedKelas = currentUser.kelasSpesifik || 'Kelas 4-A';
 
   const [filterSiswaName, setFilterSiswaName] = useState('');
   const [successMsg, setSuccessMsg] = useState('');

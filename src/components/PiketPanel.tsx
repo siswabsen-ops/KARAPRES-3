@@ -29,7 +29,7 @@ export default function PiketPanel({
             </span>
             <h2 className="text-xl font-black mt-1 tracking-tight leading-tight font-display">Pos Presensi Gerbang Karapres 3</h2>
             <p className="text-xs text-red-100 opacity-95 leading-normal mt-0.5">
-              Operator Bertugas: <b>{currentUser.namaLengkap}</b>. Prioritaskan ketepatan pencocokan barcode dan stabilisasi feed kamera di HP atau laptop.
+              Operator Bertugas: <b>{currentUser.namaLengkap}</b>. Prioritaskan ketepatan pencocokan QR Code dan stabilisasi feed kamera di HP atau laptop.
             </p>
           </div>
 
