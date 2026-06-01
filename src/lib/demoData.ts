@@ -6,7 +6,7 @@ export const USER_DEMO_ACCOUNTS: { user: User; pin: string }[] = [
     user: {
       id: 'usr-admin',
       username: 'admin',
-      namaLengkap: 'Asep Ridwan, S.Pd.',
+      namaLengkap: 'Panji Teguh Amarta Surya, S.Pd.I., Gr.',
       role: 'admin'
     },
     pin: '1234'
@@ -15,7 +15,7 @@ export const USER_DEMO_ACCOUNTS: { user: User; pin: string }[] = [
     user: {
       id: 'usr-kepsek',
       username: 'kepsek',
-      namaLengkap: 'H. Endang Suherman, M.Pd.',
+      namaLengkap: 'Cucu Maspika, S.Pd.I.,M.Pd.,MCE',
       role: 'kepsek'
     },
     pin: '2222'
@@ -86,7 +86,7 @@ export const LOGS_INITIAL: ActivityLog[] = [
   {
     id: 'log-001',
     waktu: '2026-06-01T06:45:00Z',
-    user: 'Asep Ridwan, S.Pd.',
+    user: 'Panji Teguh Amarta Surya, S.Pd.I., Gr.',
     role: 'admin',
     tindakan: 'Sistem Dimulai',
     detail: 'Sistem absensi KARAPRES 3 berhasil dimuat pada pagi hari.'

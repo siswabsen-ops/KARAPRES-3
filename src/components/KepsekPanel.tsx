@@ -145,7 +145,7 @@ export default function KepsekPanel({ siswaList, presensiList }: KepsekPanelProp
             </span>
             <h2 className="text-2xl font-black tracking-tight mt-1">Dashboard Monitoring Kepala Sekolah</h2>
             <p className="text-xs text-indigo-200 opacity-90 mt-0.5 leading-normal">
-              Selamat datang, H. Endang Suherman, M.Pd. Pantau statistik, unduh arsip laporan, dan validasi rekaman presensi SDN 3 Karamatwangi.
+              Selamat datang, Cucu Maspika, S.Pd.I.,M.Pd.,MCE. Pantau statistik, unduh arsip laporan, dan validasi rekaman presensi SDN 3 Karamatwangi.
             </p>
           </div>
 
