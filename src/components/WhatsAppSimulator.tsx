@@ -30,24 +30,33 @@ export default function WhatsAppSimulator({ logs, onClearLogs }: WhatsAppSimulat
     }
   }, [isOpen]);
 
+  // Extract parent phone number from log or raw text
+  const extractParentPhone = (pesan?: string) => {
+    if (!pesan) return '08123456789';
+    const match = pesan.match(/\((0\d+|62\d+|\+?62\d+)\)/);
+    if (match) return match[1];
+    
+    // Look for Indonesian phone number formats like 08 or 62 inside strings
+    const firstMatch = pesan.match(/\b(08\d+|62\d+)\b/);
+    if (firstMatch) return firstMatch[1];
+    return '08123456789';
+  };
+
   // Construct message content
   const formatPesan = (p: Presensi) => {
     const formattedTime = p.waktu.slice(0, 5); // Ambil jam:menit
     const labelStatus = p.status.toUpperCase();
-    return `🔔 *NOTIFIKASI KEHADIRAN - SDN 3 KARAMATWANGI*
+    return `🔔 *NOTIFIKASI KEHADIRAN AKTIF - SDN 3 KARAMATWANGI*
     
-Yth. Orang Tua/Wali Murid,
-Siswa atas nama: *${p.nama}*
-Kelas: *${p.kelas}* (NIS: *${p.nis}*)
+Yth. Orang Tua / Wali Murid dari *${p.nama}* (NIS: ${p.nis}).
 
-Telah tercatat *${labelStatus}* di sekolah pada pukul *${formattedTime}* WIB.
+Dengan hormat, kami menginfokan bahwa siswa tersebut telah tercatat *${labelStatus}* pada jam masuk hari ini pukul *${formattedTime}* WIB.
 
-Terima kasih atas perhatian dan kerja samanya.`;
+Pesan ini dikirim otomatis melalui Server Utama WA Gateway. Terima kasih atas kerja samanya.`;
   };
 
-  const getWaLinkInput = (p: Presensi) => {
-    // Sanitize phone number (remove leading 0 -> replace with 62)
-    let phone = p.pesanTerkirim?.match(/\d+/)?.[0] || '628123456789';
+  const getWaLinkInput = (p: Presensi, targetPhone: string) => {
+    let phone = targetPhone.replace(/\D/g, '');
     if (phone.startsWith('0')) {
       phone = '62' + phone.substring(1);
     }
@@ -70,7 +79,7 @@ Terima kasih atas perhatian dan kerja samanya.`;
             <span className="absolute -top-2 -right-2 w-3 h-3 bg-red-650 rounded-full animate-bounce border-2 border-emerald-500" />
           )}
         </div>
-        <span className="font-semibold text-xs tracking-wide">WA Gateway</span>
+        <span className="font-semibold text-xs tracking-wide">WA Gateway (Live)</span>
         <span className="text-[10px] bg-emerald-700/50 px-1.5 py-0.5 rounded">
           {logs.length} Notif
         </span>
@@ -80,7 +89,7 @@ Terima kasih atas perhatian dan kerja samanya.`;
       {isOpen && (
         <div
           id="wa-simulator-modal"
-          className="fixed bottom-24 right-6 z-50 w-[360px] max-w-full bg-[#E5DDD5] rounded-3xl overflow-hidden shadow-2xl border-4 border-gray-800 flex flex-col h-[524px] animate-in slide-in-from-bottom-5 duration-200"
+          className="fixed bottom-24 right-6 z-50 w-[380px] max-w-full bg-[#E5DDD5] rounded-3xl overflow-hidden shadow-2xl border-4 border-gray-800 flex flex-col h-[540px] animate-in slide-in-from-bottom-5 duration-200"
         >
           {/* Virtual Phone Header */}
           <div className="bg-[#075E54] text-white p-3.5 flex items-center justify-between border-b border-[#128C7E]">
@@ -89,11 +98,11 @@ Terima kasih atas perhatian dan kerja samanya.`;
                 WA
               </div>
               <div>
-                <h4 className="font-bold text-sm tracking-wide flex items-center gap-1.5">
-                  KARA3 WA Gateway
+                <h4 className="font-bold text-xs tracking-wide flex items-center gap-1">
+                  Server Utama WA Gateway
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                 </h4>
-                <p className="text-[10px] text-emerald-150 opacity-90">SDN 3 Karamatwangi Client</p>
+                <p className="text-[10px] text-emerald-150 opacity-90 font-mono font-bold">No. Gateway: 087844651559</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -101,7 +110,7 @@ Terima kasih atas perhatian dan kerja samanya.`;
                 type="button"
                 id="btn-wa-clear-logs"
                 onClick={onClearLogs}
-                className="text-[10px] bg-emerald-800/80 hover:bg-emerald-900 px-2 py-1 rounded transition-colors"
+                className="text-[9px] bg-emerald-800/80 hover:bg-emerald-900 px-2 py-1 rounded font-bold transition-colors"
                 title="Hapus riwayat pesan simulasi"
               >
                 Reset Chat
@@ -126,63 +135,79 @@ Terima kasih atas perhatian dan kerja samanya.`;
                 </span>
                 <p className="text-gray-700 font-medium text-xs">Belum ada Presensi Hari Ini</p>
                 <p className="text-gray-500 text-[11px] mt-1">
-                  Saat QR Code siswa dipindai, notifikasi pengiriman pesan WhatsApp ke orang tua otomatis terpantau di sini.
+                  Saat QR Code siswa dipindai, status pengiriman via Server Utama (087844651559) mendarat di sini secara real-time.
                 </p>
               </div>
             ) : (
               [...logs].reverse().map((log) => {
                 const formattedTime = log.waktu.slice(0, 5);
                 const isSent = log.waStatus === 'Terkirim';
+                const parentPhone = extractParentPhone(log.pesanTerkirim);
 
                 return (
                   <div
                     key={log.id}
-                    className="self-end max-w-[85%] bg-[#DCF8C6] p-3 rounded-lg shadow-sm text-gray-800 relative text-xs animate-in zoom-in-95 duration-150"
+                    className="self-end w-full max-w-[90%] bg-[#DCF8C6] p-3 rounded-2xl shadow-sm text-gray-800 relative text-xs animate-in zoom-in-95 duration-150"
                   >
-                    {/* Header Panggilan Penerima */}
-                    <div className="text-[10px] font-bold text-indigo-700 mb-1 border-b border-emerald-100/50 pb-0.5">
-                      Orang Tua: {log.nama} ({log.pesanTerkirim?.replace('Terkirim otomatis ke ', '') || 'Wali'})
+                    {/* Routing Header Label */}
+                    <div className="text-[9px] font-black tracking-tight text-emerald-800 mb-1.5 pb-1 border-b border-emerald-250/20 flex flex-col gap-0.5">
+                      <div className="flex justify-between">
+                        <span>📡 SERVER UTAMA WA:</span>
+                        <span className="font-mono text-indigo-700">087844651559</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>🎯 TUJUAN ORANG TUA:</span>
+                        <span className="font-mono text-rose-700 font-bold">{parentPhone}</span>
+                      </div>
                     </div>
 
                     {/* Konten template WA */}
-                    <p className="whitespace-pre-line font-serif text-gray-800 leading-tight">
+                    <p className="whitespace-pre-line font-serif text-[11px] text-gray-800 leading-normal bg-white/40 p-2 rounded-xl border border-white/50">
                       🔔 *NOTIFIKASI KEHADIRAN*
                       <br />
-                      Yth. Orang Tua/Wali Murid,
+                      Yth. Orang Tua/Wali Murid dari *{log.nama}* (NIS: {log.nis}).
                       <br />
-                      Siswa atas nama: *{log.nama}*
-                      <br />
-                      Kelas: *{log.kelas}*
-                      <br />
-                      Tercatat *{log.status.toUpperCase()}* pukul {formattedTime} WIB.
-                      <br />
-                      <br />
-                      Terima kasih atas perhatiannya.
+                      Siswa telah tercatat *{log.status.toUpperCase()}* pukul {formattedTime} WIB.
                     </p>
 
                     {/* Metadata Kaki Pesan */}
-                    <div className="flex items-center justify-end gap-1 text-[9px] text-gray-500 mt-1.5 self-end">
-                      <span>{formattedTime}</span>
-                      {isSent ? (
-                        <CheckCheck className="w-3.5 h-3.5 text-blue-500" />
-                      ) : (
-                        <Check className="w-3.5 h-3.5 text-gray-400" />
-                      )}
+                    <div className="flex items-center justify-between text-[9px] text-gray-500 mt-2">
+                      <span className="text-slate-500 font-mono">Operator: {log.operator.split(',')[0]}</span>
+                      <div className="flex items-center gap-1">
+                        <span>{formattedTime}</span>
+                        {isSent ? (
+                          <CheckCheck className="w-3.5 h-3.5 text-blue-500" />
+                        ) : (
+                          <Check className="w-3.5 h-3.5 text-gray-400" />
+                        )}
+                      </div>
                     </div>
 
-                    {/* Tombol Klik Simulasi Real */}
-                    <div className="mt-2 pt-1.5 border-t border-emerald-150/40 flex justify-between items-center text-[10px]">
-                      <span className="text-[9px] font-medium text-emerald-800 bg-emerald-100 px-1 py-0.5 rounded">
-                        API Status: SENT
+                    {/* Tombol Klik Uji Kirim Pintar */}
+                    <div className="mt-2.5 pt-2 border-t border-emerald-250/30 flex flex-col gap-1 text-[10px]">
+                      <span className="text-[8px] font-bold text-emerald-800 bg-emerald-100/80 p-1 rounded-lg text-center">
+                        API STATUS: PASSED THRU GATEWAY
                       </span>
-                      <a
-                        href={getWaLinkInput(log)}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-blue-600 hover:underline font-bold flex items-center gap-0.5"
-                      >
-                        Uji Kirim Asli &rarr;
-                      </a>
+                      <div className="grid grid-cols-2 gap-1.5 mt-1">
+                        <a
+                          href={getWaLinkInput(log, '087844651559')}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="bg-[#075E54] hover:bg-[#128C7E] text-white py-1 px-1.5 rounded-lg text-center text-[9px] font-black transition-all hover:scale-[1.02] flex items-center justify-center gap-0.5"
+                          title="Uji kirim manual ke nomor Server Utama"
+                        >
+                          Uji ke Gateway &rarr;
+                        </a>
+                        <a
+                          href={getWaLinkInput(log, parentPhone)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="bg-sky-650 hover:bg-sky-700 text-white py-1 px-1.5 rounded-lg text-center text-[9px] font-black transition-all hover:scale-[1.02] flex items-center justify-center gap-0.5"
+                          title="Uji kirim manual ke nomor Orang Tua wali asli"
+                        >
+                          Uji ke Orang Tua &rarr;
+                        </a>
+                      </div>
                     </div>
                   </div>
                 );

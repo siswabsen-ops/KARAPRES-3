@@ -211,7 +211,7 @@ export default function ScanScreen({
       waktu: waktuSekarang,
       status: determinedStatus,
       waStatus: 'Terkirim',
-      pesanTerkirim: `Terkirim otomatis ke WhatsApp Orang Tua (${matchedSiswa.waOrangTua})`,
+      pesanTerkirim: `Diproses via Server Utama WA Gateway (087844651559) ➔ Terkirim ke WhatsApp Orang Tua (${matchedSiswa.waOrangTua})`,
       operator: currentUser.namaLengkap,
     };
 
@@ -378,8 +378,26 @@ export default function ScanScreen({
                   </div>
                 </div>
 
+                {/* Gateway Routing Indicator */}
+                <div className="mt-5 w-full max-w-xs mx-auto bg-black/25 rounded-2xl p-3 border border-emerald-500/20 text-left text-xs space-y-1.5 shadow-inner">
+                  <div className="flex items-center justify-between text-emerald-200 text-[11px]">
+                    <span className="font-semibold text-emerald-300">Server Utama (WA Gateway):</span>
+                    <span className="font-mono font-black text-white">087844651559</span>
+                  </div>
+                  <div className="flex items-center justify-between text-[#E5DDD5] text-[11px]">
+                    <span className="font-semibold text-emerald-200">Tujuan Orang Tua / Wali:</span>
+                    <span className="font-mono font-black text-emerald-400">
+                      {scannedResult.pesanTerkirim?.match(/\(([^)]+)\)/)?.[1] || 'Terikirm'}
+                    </span>
+                  </div>
+                  <div className="text-[9px] text-emerald-100/50 border-t border-white/5 pt-1.5 mt-1.5 text-center flex items-center justify-center gap-1">
+                    <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
+                    <span>Gateway Status: <span className="text-emerald-400 font-bold font-mono">SENT SUCCESSFUL</span></span>
+                  </div>
+                </div>
+
                 <p className="text-[10px] text-emerald-100/90 mt-4 italic">
-                  Notifikasi WA berhasil terkirim langsung ke orang tua. Kamera siap memindai siswa berikutnya...
+                  Notifikasi WA berhasil diproses melalui Server Utama sebelum diteruskan ke Orang Tua siswa.
                 </p>
                 <button
                   type="button"

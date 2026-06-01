@@ -77,7 +77,7 @@ export default function GuruPanel({
       waktu: waktuSekarang,
       status: targetStatus,
       waStatus: 'Terkirim',
-      pesanTerkirim: `Disinkronkan manual oleh Wali Kelas: ${currentUser.namaLengkap} - No HP: ${siswa.waOrangTua}`,
+      pesanTerkirim: `Diproses via Server Utama WA Gateway (087844651559) ➔ Disinkronkan manual oleh Wali Kelas (${siswa.waOrangTua})`,
       operator: currentUser.namaLengkap,
     };
 
