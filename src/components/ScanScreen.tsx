@@ -30,12 +30,16 @@ export default function ScanScreen({
   const [isMirrored, setIsMirrored] = useState(false); // Default to false so rear camera/cards read correctly
 
   const videoRef = useRef<HTMLVideoElement>(null);
+  const scanTimeoutRef = useRef<any>(null);
 
   // Clean-up camera on unmount
   useEffect(() => {
     return () => {
       if (cameraStream) {
         cameraStream.getTracks().forEach((track) => track.stop());
+      }
+      if (scanTimeoutRef.current) {
+        clearTimeout(scanTimeoutRef.current);
       }
     };
   }, [cameraStream]);
@@ -56,37 +60,46 @@ export default function ScanScreen({
 
     let active = true;
     let animFrameId: number;
+    let lastScanTime = 0;
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
 
     const scanFrame = () => {
       if (!active) return;
 
-      if (videoRef.current && videoRef.current.readyState === videoRef.current.HAVE_ENOUGH_DATA) {
-        const video = videoRef.current;
-        canvas.width = video.videoWidth || 640;
-        canvas.height = video.videoHeight || 480;
+      const nowTime = Date.now();
+      if (nowTime - lastScanTime > 150) {
+        lastScanTime = nowTime;
 
-        if (ctx) {
-          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        if (videoRef.current && videoRef.current.readyState === videoRef.current.HAVE_ENOUGH_DATA) {
+          const video = videoRef.current;
+          // Downsample block: using smaller and standard sizes for jsQR makes processing lightning fast
+          const width = 480;
+          const height = 360;
+          canvas.width = width;
+          canvas.height = height;
 
-          try {
-            const code = jsQR(imageData.data, imageData.width, imageData.height, {
-              inversionAttempts: 'dontInvert',
-            });
+          if (ctx) {
+            ctx.drawImage(video, 0, 0, width, height);
+            const imageData = ctx.getImageData(0, 0, width, height);
 
-            if (code && code.data) {
-              const decodedNis = code.data.trim();
-              if (decodedNis) {
-                // Succesfully decoded! Complete scan
-                active = false;
-                handleScanIdentify(decodedNis);
-                return;
+            try {
+              const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                inversionAttempts: 'dontInvert',
+              });
+
+              if (code && code.data) {
+                const decodedNis = code.data.trim();
+                if (decodedNis) {
+                  // Successfully decoded! Complete scan
+                  active = false;
+                  handleScanIdentify(decodedNis);
+                  return;
+                }
               }
+            } catch (e) {
+              console.error('jsQR scanning error:', e);
             }
-          } catch (e) {
-            console.error('jsQR scanning error:', e);
           }
         }
       }
@@ -94,10 +107,10 @@ export default function ScanScreen({
       animFrameId = requestAnimationFrame(scanFrame);
     };
 
-    // A small buffer timeout to let camera adjust brightness before scanning starts
+    // A tiny buffer delay to let the camera source stabilize
     const startTimeout = setTimeout(() => {
       animFrameId = requestAnimationFrame(scanFrame);
-    }, 600);
+    }, 150);
 
     return () => {
       active = false;
@@ -139,11 +152,18 @@ export default function ScanScreen({
     setErrorMsg('');
     const matchedSiswa = siswaList.find((s) => s.nis === nis.trim());
     
+    if (scanTimeoutRef.current) {
+      clearTimeout(scanTimeoutRef.current);
+    }
+
     if (!matchedSiswa) {
       setScannerStatus('ERROR');
       setErrorMsg(`Siswa dengan NIS ${nis} tidak ditemukan.`);
-      // Auto reset status after 3 seconds
-      setTimeout(() => setScannerStatus('READY'), 3000);
+      // Auto reset status back to SCANNING after 2 seconds
+      scanTimeoutRef.current = setTimeout(() => {
+        setScannerStatus('SCANNING');
+        setErrorMsg('');
+      }, 200);
       return;
     }
 
@@ -215,11 +235,12 @@ export default function ScanScreen({
       // Browser blocks audio until interaction, ignore
     }
 
-    // Auto clear scanned view back to scan mode after 4 seconds
-    setTimeout(() => {
-      setScannerStatus('READY');
+    // Auto clear scanned view and resume scanning automatically after 1.5 seconds
+    scanTimeoutRef.current = setTimeout(() => {
+      setScannerStatus('SCANNING');
       setScannedResult(null);
-    }, 4500);
+      setErrorMsg('');
+    }, 1500);
   };
 
   const handleNisSubmit = (e: React.FormEvent) => {
@@ -357,9 +378,25 @@ export default function ScanScreen({
                   </div>
                 </div>
 
-                <p className="text-[10px] text-emerald-100/90 mt-5 italic">
+                <p className="text-[10px] text-emerald-100/90 mt-4 italic">
                   Notifikasi WA berhasil terkirim langsung ke orang tua. Kamera siap memindai siswa berikutnya...
                 </p>
+                <button
+                  type="button"
+                  id="btn-scan-next-instant"
+                  onClick={() => {
+                    if (scanTimeoutRef.current) {
+                      clearTimeout(scanTimeoutRef.current);
+                    }
+                    setScannerStatus('SCANNING');
+                    setScannedResult(null);
+                    setErrorMsg('');
+                  }}
+                  className="mt-4 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-xs py-2.5 px-6 rounded-2xl shadow-lg cursor-pointer transition-all active:scale-95 flex items-center gap-1.5 border border-emerald-400 select-none"
+                >
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin-slow text-white" />
+                  Lewati & Pindai Murid Selanjutnya &rarr;
+                </button>
               </div>
             )}
           </div>
