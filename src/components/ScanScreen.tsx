@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Camera, Search, UserCheck, AlertTriangle, Clock, Smartphone, MessageCircle, RefreshCw, Star } from 'lucide-react';
 import { Siswa, Presensi, SystemSettings, StatusKehadiran } from '../types';
 import QRCodeRenderer from './QRCodeRenderer';
+// @ts-ignore
+import jsQR from 'jsqr';
 
 interface ScanScreenProps {
   siswaList: Siswa[];
@@ -25,6 +27,7 @@ export default function ScanScreen({
   const [scannedResult, setScannedResult] = useState<Presensi | null>(null);
   const [manualStatus, setManualStatus] = useState<StatusKehadiran | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
+  const [isMirrored, setIsMirrored] = useState(false); // Default to false so rear camera/cards read correctly
 
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -36,6 +39,74 @@ export default function ScanScreen({
       }
     };
   }, [cameraStream]);
+
+  // Safely assign the stream to the video element whenever it is mounted
+  useEffect(() => {
+    if (useCamera && cameraStream && videoRef.current) {
+      videoRef.current.srcObject = cameraStream;
+      videoRef.current.play().catch((err) => {
+        console.warn('Video element play failure:', err);
+      });
+    }
+  }, [useCamera, cameraStream]);
+
+  // Real-time loop to auto-capture frames from key video and decode with jsQR
+  useEffect(() => {
+    if (!useCamera || !cameraStream || scannerStatus !== 'SCANNING') return;
+
+    let active = true;
+    let animFrameId: number;
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    const scanFrame = () => {
+      if (!active) return;
+
+      if (videoRef.current && videoRef.current.readyState === videoRef.current.HAVE_ENOUGH_DATA) {
+        const video = videoRef.current;
+        canvas.width = video.videoWidth || 640;
+        canvas.height = video.videoHeight || 480;
+
+        if (ctx) {
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+          try {
+            const code = jsQR(imageData.data, imageData.width, imageData.height, {
+              inversionAttempts: 'dontInvert',
+            });
+
+            if (code && code.data) {
+              const decodedNis = code.data.trim();
+              if (decodedNis) {
+                // Succesfully decoded! Complete scan
+                active = false;
+                handleScanIdentify(decodedNis);
+                return;
+              }
+            }
+          } catch (e) {
+            console.error('jsQR scanning error:', e);
+          }
+        }
+      }
+
+      animFrameId = requestAnimationFrame(scanFrame);
+    };
+
+    // A small buffer timeout to let camera adjust brightness before scanning starts
+    const startTimeout = setTimeout(() => {
+      animFrameId = requestAnimationFrame(scanFrame);
+    }, 600);
+
+    return () => {
+      active = false;
+      clearTimeout(startTimeout);
+      if (animFrameId) {
+        cancelAnimationFrame(animFrameId);
+      }
+    };
+  }, [useCamera, cameraStream, scannerStatus]);
 
   // Turn on/off real browser camera
   const toggleCamera = async () => {
@@ -52,12 +123,9 @@ export default function ScanScreen({
       setErrorMsg('');
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'environment', width: 640, height: 480 },
+          video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
         });
         setCameraStream(stream);
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-        }
       } catch (err) {
         console.warn('Webcam access was restricted, fallback to simulator webcam stream', err);
         setErrorMsg('Webcam asli terbatasi (atau dijalankan di sandbox). Kami mensimulasikan feed kamera sekolah dengan laser target.');
@@ -205,7 +273,7 @@ export default function ScanScreen({
                   ref={videoRef}
                   autoPlay
                   playsInline
-                  className="w-full h-full object-cover transform scale-x-[-1]"
+                  className={`w-full h-full object-cover transform ${isMirrored ? 'scale-x-[-1]' : ''}`}
                   title="Tampilan kamera aktif"
                 />
                 
@@ -298,8 +366,21 @@ export default function ScanScreen({
 
           {/* CAMERA DECOR & SWITCH TOGGLE */}
           {useCamera && (
-            <div className="mt-3 flex items-center justify-between border border-slate-100 bg-slate-50 rounded-2xl p-3">
-              <span className="text-xs text-slate-500 font-bold">Kamera Terintegrasi: Live View SDN 3</span>
+            <div className="mt-3 flex flex-col sm:flex-row items-center justify-between gap-2 border border-slate-100 bg-slate-50 rounded-2xl p-3">
+              <div className="flex flex-col sm:flex-row items-center gap-2">
+                <span className="text-xs text-slate-500 font-bold">Kamera Terintegrasi: Live View SDN 3</span>
+                <button
+                  type="button"
+                  onClick={() => setIsMirrored(!isMirrored)}
+                  className={`text-[10px] font-bold py-1 px-2.5 rounded-lg border transition-all cursor-pointer ${
+                    isMirrored
+                      ? 'bg-rose-50 text-rose-700 border-rose-200'
+                      : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                  }`}
+                >
+                  {isMirrored ? '🔄 Mirror Aktif (Terbalik)' : '🔄 Cermin Nonaktif (Normal)'}
+                </button>
+              </div>
               <button
                 type="button"
                 id="btn-turn-off-cam"
