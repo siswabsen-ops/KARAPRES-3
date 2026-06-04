@@ -279,7 +279,7 @@ export default function AdminPanel({
             </div>
             <div class="student-info">${selectedPrintSiswa?.nama}</div>
             <div class="meta-desc">NIS: ${selectedPrintSiswa?.nis} • ${selectedPrintSiswa?.kelas}</div>
-            <div class="meta-desc" style="font-style: italic;">Suku Cadang Utama KARAPRES 3 App • Kab. Garut</div>
+            <div class="meta-desc" style="font-style: italic;">Suku Cadang Utama DIGIWANGI 3 App • Kab. Garut</div>
             <div class="footer-copyright">SDN 3 Karamatwangi, Cisurupan, Garut</div>
           </div>
         </body>
@@ -1063,7 +1063,7 @@ export default function AdminPanel({
                     🛡️ PENGATURAN & KREDENSI AKUN OPERATOR
                   </h3>
                   <p className="text-xs text-gray-500 mt-1 leading-normal">
-                    Kelola nama lengkap, nama pengguna (username), kata sandi PIN, serta peranan hak akses operator KARAPRES 3.
+                    Kelola nama lengkap, nama pengguna (username), kata sandi PIN, serta peranan hak akses operator DIGIWANGI 3.
                   </p>
                 </div>
                 {!isAddingNewAccount && !editingAccountId && (

@@ -512,7 +512,7 @@ export default function ScanScreen({
             <span className="text-[9px] bg-red-50 text-red-700 px-2 py-0.5 rounded font-bold font-mono uppercase">Interactive Demo</span>
           </div>
           <p className="text-xs text-gray-500 leading-relaxed mb-4">
-            Untuk menguji aliran sistem <b>KARAPRES 3</b> tanpa printer scan QR Code fisik, klik salah satu kartu siswa virtual di bawah ini untuk mensimulasikan pemindaian laser QR Code secara otomatis!
+            Untuk menguji aliran sistem <b>DIGIWANGI 3</b> tanpa printer scan QR Code fisik, klik salah satu kartu siswa virtual di bawah ini untuk mensimulasikan pemindaian laser QR Code secara otomatis!
           </p>
 
           {/* Interactive Virtual Students Card Matrix */}

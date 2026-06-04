@@ -58,8 +58,8 @@ export default function LoginScreen({ onLoginSuccess, accountsList }: LoginScree
             <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-md border border-white/20 shadow-inner mb-6">
               <Shield className="w-8 h-8 text-red-100" />
             </div>
-            <h2 className="text-3xl font-black tracking-tighter leading-none font-display">KARAPRES 3</h2>
-            <p className="text-sm font-semibold text-red-200 mt-2 font-display uppercase tracking-widest">Karamatwangi Presensi 3</p>
+            <h2 className="text-3xl font-black tracking-tighter leading-none font-display">DIGIWANGI 3</h2>
+            <p className="text-sm font-semibold text-red-200 mt-2 font-display uppercase tracking-widest">Digital Karamatwangi 3</p>
             <p className="text-xs text-red-200/90 mt-1.5 leading-relaxed">
               Sistem manajemen kehadiran digital handal SDN 3 Karamatwangi, Kecamatan Cisurupan, Kabupaten Garut.
             </p>

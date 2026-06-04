@@ -385,7 +385,7 @@ export default function App() {
     }
     setIsSyncing(true);
     try {
-      const title = `KARAPRES 3 SDN 3 Karamatwangi - Database Kehadiran`;
+      const title = `DIGIWANGI 3 SDN 3 Karamatwangi - Database Kehadiran`;
       const newId = await createNewSpreadsheet(googleToken, title);
       addActivityLog('Spreadsheet Baru', `Membuat spreadsheet Google baru dengan ID: ${newId}`);
       
@@ -477,7 +477,7 @@ export default function App() {
       ]);
       const csvStr = [headers.join(','), ...rows.map(r => r.map(v => `"${(v || '').replace(/"/g, '""')}"`).join(','))].join('\n');
       
-      const fileName = `KARAPRES3_BAK_${new Date().toISOString().replace(/[:.]/g, '-')}.csv`;
+      const fileName = `DIGIWANGI3_BAK_${new Date().toISOString().replace(/[:.]/g, '-')}.csv`;
       
       const fileId = await uploadBackupFileToDrive(googleToken, settings.googleDriveFolderId, fileName, csvStr);
       addActivityLog('Arsip Drive Berhasil', `Membuat cadangan CSV di Google Drive, ID file: ${fileId}`);
@@ -709,7 +709,7 @@ export default function App() {
                   Manual Resmi V2.0
                 </span>
                 <h2 className="text-2xl font-black text-slate-800 tracking-tight mt-2">
-                  Panduan Setup & Pengoperasian Aplikasi KARAPRES 3
+                  Panduan Setup & Pengoperasian Aplikasi DIGIWANGI 3
                 </h2>
                 <p className="text-gray-500 text-xs mt-1.5">
                   Langkah-langkah lengkap untuk mengoperasikan presensi berbasis QR Code & notifikasi WhatsApp otomatis di SDN 3 Karamatwangi, Cisurupan, Garut.
@@ -744,11 +744,11 @@ export default function App() {
                 </h3>
                 <div className="text-xs text-gray-600 space-y-2 pl-8 leading-relaxed">
                   <p>
-                    Untuk memastikan keawetan arsip, data KARAPRES 3 terhubung langsung ke Google Sheets (basis data kolom) dan Google Drive (unggah PDF-Excel ekspor).
+                    Untuk memastikan keawetan arsip, data DIGIWANGI 3 terhubung langsung ke Google Sheets (basis data kolom) dan Google Drive (unggah PDF-Excel ekspor).
                   </p>
                   <ul className="list-disc list-inside space-y-1.5 text-gray-500 pl-2">
                     <li>Tentukan dokumen Google Spreadsheet kosong Anda di browser, salin kode ID beruntun di URL (Contoh ID: <code>1uNz6D82J0xOnS5Nsc_Xpxc...</code>).</li>
-                    <li>Buka tab <b>Google Cloud Sync</b> di menu Admin KARAPRES 3.</li>
+                    <li>Buka tab <b>Google Cloud Sync</b> di menu Admin DIGIWANGI 3.</li>
                     <li>Paste atau masukkan string ID ke kolom input <b>Google Spreadsheet-ID</b>. Lakukan hal yang sama untuk ID Google Drive Folder Anda.</li>
                     <li>Klik tombol <b>Simpan & Inisialisasi API Google</b>.</li>
                     <li>Aplikasi sekarang berjalan dwi-perangkat secara instan. Mengetik data siswa di laptop akan langsung tersinkron di HP karena database real-time online yang sama.</li>
@@ -786,10 +786,10 @@ export default function App() {
                   </p>
                   <ol className="list-decimal list-inside space-y-1 text-gray-550 pl-2">
                     <li>Buat akun gratis di situs <a href="https://vercel.com" target="_blank" rel="noreferrer" className="text-rose-600 underline font-semibold">vercel.com</a> melalui GitHub atau Google.</li>
-                    <li>Gunakan tombol <b>"Export ZIP"</b> di menu pengaturan editor Google AI Studio Anda untuk mengunduh kode program KARAPRES 3 ke komputer Anda.</li>
-                    <li>Hubungkan repositori GitHub Anda dengan Vercel, lalu pilih tombol <b>Import Project</b> pada folder KARAPRES 3 ini.</li>
+                    <li>Gunakan tombol <b>"Export ZIP"</b> di menu pengaturan editor Google AI Studio Anda untuk mengunduh kode program DIGIWANGI 3 ke komputer Anda.</li>
+                    <li>Hubungkan repositori GitHub Anda dengan Vercel, lalu pilih tombol <b>Import Project</b> pada folder DIGIWANGI 3 ini.</li>
                     <li>Vercel akan otomatis mengenali konfigurasi bundler Vite kita. Cukup klik tombol <b>Deploy</b>.</li>
-                    <li>Dalam 1 menit, link online Anda (misal: <code>karapres3-sdn3.vercel.app</code>) siap dibagikan ke HP guru dan laptop piket sekolah secara bersamaan!</li>
+                    <li>Dalam 1 menit, link online Anda (misal: <code>digiwangi3-sdn3.vercel.app</code>) siap dibagikan ke HP guru dan laptop piket sekolah secara bersamaan!</li>
                   </ol>
                 </div>
               </div>
@@ -851,7 +851,7 @@ export default function App() {
           <div className="text-center md:text-left">
             <p className="font-bold text-slate-200">SDN 3 Karamatwangi, Cisurupan, Garut</p>
             <p className="text-[10px] text-slate-500 mt-1">
-              Sistem Absensi QR Code Terpadu "KARAPRES 3" v2.1.0-WEB • Digarap Kokoh Bebas Bug
+              Sistem Absensi QR Code Terpadu "DIGIWANGI 3" v2.1.0-WEB • Digarap Kokoh Bebas Bug
             </p>
           </div>
           <div className="flex gap-4">

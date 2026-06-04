@@ -246,7 +246,7 @@ export default function ReportPanel({ siswaList, presensiList }: ReportPanelProp
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', `KARAPRES3_LAPORAN_HARIAN_${selectedKelas.replace(/\s+/g, '_')}_${harianDate}.csv`);
+    link.setAttribute('download', `DIGIWANGI3_LAPORAN_HARIAN_${selectedKelas.replace(/\s+/g, '_')}_${harianDate}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -293,7 +293,7 @@ export default function ReportPanel({ siswaList, presensiList }: ReportPanelProp
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', `KARAPRES3_LAPORAN_MINGGUAN_${selectedKelas.replace(/\s+/g, '_')}_Mulai_${mingguanDate}.csv`);
+    link.setAttribute('download', `DIGIWANGI3_LAPORAN_MINGGUAN_${selectedKelas.replace(/\s+/g, '_')}_Mulai_${mingguanDate}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -334,7 +334,7 @@ export default function ReportPanel({ siswaList, presensiList }: ReportPanelProp
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', `KARAPRES3_LAPORAN_BULANAN_${selectedKelas.replace(/\s+/g, '_')}_${bulananMonth}.csv`);
+    link.setAttribute('download', `DIGIWANGI3_LAPORAN_BULANAN_${selectedKelas.replace(/\s+/g, '_')}_${bulananMonth}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

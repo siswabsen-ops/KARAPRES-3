@@ -1,7 +1,7 @@
 import { Database, Flame, Wifi, RefreshCw } from 'lucide-react';
 import { User } from '../types';
 
-const schoolLogo = '/src/assets/images/logo_karapres_1780337245433.png';
+const schoolLogo = '/src/assets/images/mascot_digiwangi_1780544448389.png';
 
 interface HeaderProps {
   currentUser: User | null;
@@ -32,7 +32,7 @@ export default function Header({
           <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center p-0.5 shadow-md border border-red-100 shrink-0 overflow-hidden">
             <img 
               src={schoolLogo} 
-              alt="Logo KARAPRES 3" 
+              alt="Logo DIGIWANGI 3" 
               referrerPolicy="no-referrer"
               className="w-full h-full object-cover rounded-full"
             />
@@ -48,7 +48,7 @@ export default function Header({
               </span>
             </div>
             <h1 className="text-2xl font-black text-white tracking-tighter leading-none mt-1 flex items-center gap-2">
-              <span>KARAPRES 3</span>
+              <span>DIGIWANGI 3</span>
               <span className="text-red-400 font-extralight text-lg">|</span>
               <span className="text-xs font-semibold text-red-100 tracking-wide self-end mb-0.5">
                 Presensi & Notifikasi Terpadu

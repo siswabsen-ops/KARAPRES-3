@@ -89,7 +89,7 @@ export const LOGS_INITIAL: ActivityLog[] = [
     user: 'Panji Teguh Amarta Surya, S.Pd.I., Gr.',
     role: 'admin',
     tindakan: 'Sistem Dimulai',
-    detail: 'Sistem absensi KARAPRES 3 berhasil dimuat pada pagi hari.'
+    detail: 'Sistem absensi DIGIWANGI 3 berhasil dimuat pada pagi hari.'
   },
   {
     id: 'log-002',

@@ -27,7 +27,7 @@ export default function PiketPanel({
             <span className="bg-white/15 border border-white/20 text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full inline-block">
               Petugas Tiket Gerbang
             </span>
-            <h2 className="text-xl font-black mt-1 tracking-tight leading-tight font-display">Pos Presensi Gerbang Karapres 3</h2>
+            <h2 className="text-xl font-black mt-1 tracking-tight leading-tight font-display">Pos Presensi Gerbang Digiwangi 3</h2>
             <p className="text-xs text-red-100 opacity-95 leading-normal mt-0.5">
               Operator Bertugas: <b>{currentUser.namaLengkap}</b>. Prioritaskan ketepatan pencocokan QR Code dan stabilisasi feed kamera di HP atau laptop.
             </p>
