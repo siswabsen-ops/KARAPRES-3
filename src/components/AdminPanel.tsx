@@ -264,8 +264,8 @@ export default function AdminPanel({
           <title>Kartu Absensi SDN 3 Karamatwangi</title>
           <style>
             body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background-white; }
-            .print-card-frame { border: 4px solid #e11d48; border-radius: 16px; padding: 24px; width: 350px; text-align: center; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
-            .header-banner { background-color: #e11d48; color: white; padding: 10px; font-weight: bold; font-size: 14px; border-radius: 8px; margin-bottom: 20px; }
+            .print-card-frame { border: 4px solid #1d4ed8; border-radius: 16px; padding: 24px; width: 350px; text-align: center; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+            .header-banner { background-color: #1d4ed8; color: white; padding: 10px; font-weight: bold; font-size: 14px; border-radius: 8px; margin-bottom: 20px; }
             .student-info { margin-top: 15px; font-weight: bold; font-size: 16px; color: #1e293b; }
             .meta-desc { font-size: 11px; color: #64748b; margin-top: 4px; }
             .footer-copyright { font-size: 9px; color: #94a3b8; border-top: 1px solid #e2e8f0; margin-top: 20px; padding-top: 8px; }
@@ -320,7 +320,7 @@ export default function AdminPanel({
                 onClick={() => { setActiveTab('siswa'); setSelectedPrintSiswa(null); }}
                 className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer ${
                   activeTab === 'siswa'
-                    ? 'bg-red-50 text-red-700 shadow-xs'
+                    ? 'bg-blue-50 text-blue-700 shadow-xs'
                     : 'text-slate-600 hover:bg-slate-50'
                 }`}
               >
@@ -335,7 +335,7 @@ export default function AdminPanel({
                 onClick={() => setActiveTab('kelas')}
                 className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer ${
                   activeTab === 'kelas'
-                    ? 'bg-red-50 text-red-700 shadow-xs'
+                    ? 'bg-blue-50 text-blue-700 shadow-xs'
                     : 'text-slate-600 hover:bg-slate-50'
                 }`}
               >
@@ -350,7 +350,7 @@ export default function AdminPanel({
                 onClick={() => setActiveTab('whatsapp')}
                 className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer ${
                   activeTab === 'whatsapp'
-                    ? 'bg-red-50 text-red-700 shadow-xs'
+                    ? 'bg-blue-50 text-blue-700 shadow-xs'
                     : 'text-slate-600 hover:bg-slate-50'
                 }`}
               >
@@ -365,7 +365,7 @@ export default function AdminPanel({
                 onClick={() => setActiveTab('waktu')}
                 className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer ${
                   activeTab === 'waktu'
-                    ? 'bg-red-50 text-red-700 shadow-xs'
+                    ? 'bg-blue-50 text-blue-700 shadow-xs'
                     : 'text-slate-600 hover:bg-slate-50'
                 }`}
               >
@@ -380,7 +380,7 @@ export default function AdminPanel({
                 onClick={() => setActiveTab('google')}
                 className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer ${
                   activeTab === 'google'
-                    ? 'bg-red-50 text-red-700 shadow-xs'
+                    ? 'bg-blue-50 text-blue-700 shadow-xs'
                     : 'text-slate-600 hover:bg-slate-50'
                 }`}
               >
@@ -395,7 +395,7 @@ export default function AdminPanel({
                 onClick={() => setActiveTab('audit')}
                 className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer ${
                   activeTab === 'audit'
-                    ? 'bg-red-50 text-red-700 shadow-xs'
+                    ? 'bg-blue-50 text-blue-700 shadow-xs'
                     : 'text-slate-600 hover:bg-slate-50'
                 }`}
               >
@@ -410,7 +410,7 @@ export default function AdminPanel({
                 onClick={() => setActiveTab('akun')}
                 className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer ${
                   activeTab === 'akun'
-                    ? 'bg-red-50 text-red-700 shadow-xs'
+                    ? 'bg-blue-50 text-blue-700 shadow-xs'
                     : 'text-slate-600 hover:bg-slate-50'
                 }`}
               >

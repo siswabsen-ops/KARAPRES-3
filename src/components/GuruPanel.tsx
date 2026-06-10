@@ -141,7 +141,7 @@ export default function GuruPanel({
           <p className="text-2xl font-black text-slate-800 mt-1">{loggedSakit + loggedIzin}</p>
         </div>
         <div className="bg-white p-3.5 rounded-2xl border border-gray-150 shadow-xs text-left">
-          <span className="text-[9px] bg-red-50 text-red-700 border border-red-200 px-1.5 py-0.5 rounded font-extrabold uppercase">Belum Absen</span>
+          <span className="text-[9px] bg-blue-50 text-blue-700 border border-blue-200 px-1.5 py-0.5 rounded font-extrabold uppercase">Belum Absen</span>
           <p className="text-2xl font-black text-slate-800 mt-1">{belumScannedCount}</p>
         </div>
       </div>
@@ -150,7 +150,7 @@ export default function GuruPanel({
       <div className="bg-white rounded-3xl p-5 border border-gray-150 shadow-sm space-y-4 font-sans">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-gray-150 pb-3">
           <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5 font-display">
-            <Notebook className="w-4.5 h-4.5 text-red-700" />
+            <Notebook className="w-4.5 h-4.5 text-blue-700" />
             PRESENSI & DAFTAR MURID {targetedKelas.toUpperCase()}
           </h3>
 
@@ -201,7 +201,7 @@ export default function GuruPanel({
                         Status: {registered.status} ({registered.waktu.slice(0, 5)} WIB)
                       </span>
                     ) : (
-                      <span className="inline-block mt-2 font-black text-[9px] uppercase tracking-wider text-red-700 bg-red-50 py-1 px-2.5 rounded-xl border border-red-100">
+                      <span className="inline-block mt-2 font-black text-[9px] uppercase tracking-wider text-blue-700 bg-blue-50 py-1 px-2.5 rounded-xl border border-blue-100">
                         Belum Presensi Hari Ini
                       </span>
                     )}

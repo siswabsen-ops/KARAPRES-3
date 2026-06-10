@@ -268,7 +268,7 @@ export default function ScanScreen({
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-lg font-black text-slate-800 tracking-tight flex items-center gap-2 font-display">
-                <Camera className="w-5 h-5 text-red-750 animate-pulse" />
+                <Camera className="w-5 h-5 text-blue-700 animate-pulse" />
                 Pindai QR Code Kartu Siswa
               </h3>
               <p className="text-xs text-slate-500">
@@ -279,8 +279,8 @@ export default function ScanScreen({
             {/* Toleransi limit indicator */}
             <div className="text-right select-none">
               <span className="text-[9px] uppercase font-bold tracking-widest text-slate-400 block font-display">BATAS HADIR</span>
-              <span className="text-xs font-black text-red-700 bg-red-50 border border-red-200 py-1 px-2.5 rounded-xl flex items-center gap-1.5 mt-0.5">
-                <Clock className="w-4 h-4 text-red-700" />
+              <span className="text-xs font-black text-blue-700 bg-blue-50 border border-blue-200 py-1 px-2.5 rounded-xl flex items-center gap-1.5 mt-0.5">
+                <Clock className="w-4 h-4 text-blue-700" />
                 {settings.jamMasuk} - {settings.jamToleransi} WIB
               </span>
             </div>
@@ -300,7 +300,7 @@ export default function ScanScreen({
                 
                 {/* Laser scan line sweep effect */}
                 {scannerStatus === 'SCANNING' && (
-                  <div className="absolute inset-x-0 top-1/2 h-0.5 bg-red-604 shadow-[0_0_10px_#ef4444] animate-bounce z-10" />
+                  <div className="absolute inset-x-0 top-1/2 h-0.5 bg-blue-500 shadow-[0_0_10px_#3b82f6] animate-bounce z-10" />
                 )}
                 
                 {/* Green corner targeting overlay frame */}
@@ -322,7 +322,7 @@ export default function ScanScreen({
             ) : (
               // Standby View
               <div className="text-center p-6 space-y-3 max-w-sm">
-                <div className="w-16 h-16 bg-slate-900 rounded-full flex items-center justify-center text-red-650 mx-auto shadow-md border border-slate-800">
+                <div className="w-16 h-16 bg-slate-900 rounded-full flex items-center justify-center text-blue-500 mx-auto shadow-md border border-slate-800">
                   <Camera className="w-8 h-8" />
                 </div>
                 <div>
@@ -335,7 +335,7 @@ export default function ScanScreen({
                   type="button"
                   id="btn-trigger-camera"
                   onClick={toggleCamera}
-                  className="bg-red-700 hover:bg-red-800 text-white rounded-xl font-bold text-xs py-2.5 px-5 shadow-lg transition-all inline-block cursor-pointer active:scale-95 font-display tracking-tight"
+                  className="bg-blue-700 hover:bg-blue-800 text-white rounded-xl font-bold text-xs py-2.5 px-5 shadow-lg transition-all inline-block cursor-pointer active:scale-95 font-display tracking-tight"
                 >
                   Aktifkan Kamera Scanner
                 </button>
@@ -440,7 +440,7 @@ export default function ScanScreen({
                 type="button"
                 id="btn-turn-off-cam"
                 onClick={toggleCamera}
-                className="text-xs font-bold text-red-700 hover:text-red-950 cursor-pointer"
+                className="text-xs font-bold text-blue-700 hover:text-blue-950 cursor-pointer"
               >
                 Matikan Kamera
               </button>
@@ -460,7 +460,7 @@ export default function ScanScreen({
                   value={nisInput}
                   onChange={(e) => setNisInput(e.target.value)}
                   placeholder="Ketik NIS Siswa di sini"
-                  className="w-full bg-white border border-gray-300 rounded-xl py-2 px-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-700 font-mono font-medium"
+                  className="w-full bg-white border border-gray-300 rounded-xl py-2 px-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-700 font-mono font-medium"
                 />
               </div>
 
@@ -473,7 +473,7 @@ export default function ScanScreen({
                     onClick={() => setManualStatus(st)}
                     className={`flex-1 text-[10px] font-bold py-1.5 px-1.5 rounded-lg transition-all cursor-pointer ${
                       manualStatus === st
-                        ? 'bg-red-700 text-white shadow-md'
+                        ? 'bg-blue-700 text-white shadow-md'
                         : 'text-slate-600 hover:bg-slate-150'
                     }`}
                   >
@@ -494,7 +494,7 @@ export default function ScanScreen({
               </div>
             </div>
             <p className="text-[10px] text-gray-400 mt-2">
-              *Jika tidak mengaktifkan pilihan status, status otomatis terisi <span className="font-bold text-red-700">Terlambat</span> setelah melewati jam {settings.jamToleransi} WIB.
+              *Jika tidak mengaktifkan pilihan status, status otomatis terisi <span className="font-bold text-blue-700">Terlambat</span> setelah melewati jam {settings.jamToleransi} WIB.
             </p>
           </form>
         </div>
@@ -509,7 +509,7 @@ export default function ScanScreen({
               <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
               Simulasi Pindai Instan (Klik Murid)
             </h3>
-            <span className="text-[9px] bg-red-50 text-red-700 px-2 py-0.5 rounded font-bold font-mono uppercase">Interactive Demo</span>
+            <span className="text-[9px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded font-bold font-mono uppercase">Interactive Demo</span>
           </div>
           <p className="text-xs text-gray-500 leading-relaxed mb-4">
             Untuk menguji aliran sistem <b>DIGIWANGI 3</b> tanpa printer scan QR Code fisik, klik salah satu kartu siswa virtual di bawah ini untuk mensimulasikan pemindaian laser QR Code secara otomatis!
@@ -530,7 +530,7 @@ export default function ScanScreen({
                   className={`p-2.5 rounded-2xl border transition-all flex items-center justify-between gap-3 group relative overflow-hidden text-left ${
                     presentToday
                       ? 'bg-emerald-50 border-emerald-250 hover:bg-emerald-100'
-                      : 'bg-white border-slate-200 hover:border-red-300 hover:shadow-sm'
+                      : 'bg-white border-slate-200 hover:border-blue-300 hover:shadow-sm'
                   }`}
                 >
                   <div className="flex items-center gap-2 max-w-[55%]">
@@ -540,7 +540,7 @@ export default function ScanScreen({
                       {siswa.nama.charAt(0)}
                     </div>
                     <div className="truncate">
-                      <h4 className="text-xs font-bold text-gray-800 truncate leading-none group-hover:text-red-700 transition-colors">
+                      <h4 className="text-xs font-bold text-gray-800 truncate leading-none group-hover:text-blue-700 transition-colors">
                         {siswa.nama}
                       </h4>
                       <span className="text-[9px] font-mono text-gray-400 font-semibold block mt-1">
@@ -583,7 +583,7 @@ export default function ScanScreen({
                         className={`text-[9px] font-extrabold py-1 px-2.5 rounded-lg cursor-pointer transition-all ${
                           presentToday
                             ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                            : 'bg-red-700 hover:bg-red-800 text-white shadow-sm'
+                            : 'bg-blue-700 hover:bg-blue-800 text-white shadow-sm'
                         }`}
                         title="Simulasikan Scan QR Code otomatis untuk murid ini"
                       >

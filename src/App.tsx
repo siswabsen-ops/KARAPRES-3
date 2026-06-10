@@ -541,7 +541,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans selection:bg-red-200">
+    <div className="min-h-screen bg-slate-50 flex flex-col font-sans selection:bg-blue-200">
       
       {/* Header bar */}
       <Header
@@ -562,7 +562,7 @@ export default function App() {
               onClick={() => setCurrentView('scan')}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
                 currentView === 'scan'
-                  ? 'bg-red-700 text-white shadow-md'
+                  ? 'bg-blue-700 text-white shadow-md'
                   : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
               }`}
             >
@@ -577,7 +577,7 @@ export default function App() {
               }}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
                 currentView === 'manajemen'
-                  ? 'bg-red-700 text-white shadow-md'
+                  ? 'bg-blue-700 text-white shadow-md'
                   : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
               }`}
             >
@@ -590,7 +590,7 @@ export default function App() {
               onClick={() => setCurrentView('laporan')}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
                 currentView === 'laporan'
-                  ? 'bg-red-700 text-white shadow-md'
+                  ? 'bg-blue-700 text-white shadow-md'
                   : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
               }`}
             >
@@ -603,7 +603,7 @@ export default function App() {
               onClick={() => setCurrentView('panduan')}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
                 currentView === 'panduan'
-                  ? 'bg-red-700 text-white shadow-md'
+                  ? 'bg-blue-700 text-white shadow-md'
                   : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
               }`}
             >
@@ -613,7 +613,7 @@ export default function App() {
           </div>
 
           <div className="text-[11px] text-slate-500 font-bold hidden md:block">
-            SDN 3 Karamatwangi, Cisurupan, Garut • <span className="text-red-700 font-extrabold uppercase tracking-wider">Terbuka Online</span>
+            SDN 3 Karamatwangi, Cisurupan, Garut • <span className="text-blue-700 font-extrabold uppercase tracking-wider">Terbuka Online</span>
           </div>
         </div>
       </div>
@@ -881,7 +881,7 @@ export default function App() {
       {showClearPresensiConfirm && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-[2px] flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
           <div className="bg-white rounded-3xl p-6 max-w-sm w-full border border-slate-200 shadow-2xl text-center space-y-4 animate-in zoom-in-95 duration-200">
-            <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center text-red-700 mx-auto">
+            <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center text-blue-700 mx-auto">
               <Layers className="w-6 h-6 animate-pulse" />
             </div>
             <div>
@@ -889,7 +889,7 @@ export default function App() {
               <p className="text-xs text-slate-500 leading-relaxed mt-1.5 font-sans">
                 Apakah Anda yakin ingin mematikan dan membersihkan seluruh riwayat presensi simulasi saat ini?
               </p>
-              <p className="text-[10px] text-red-700 bg-red-50 py-1.5 px-3 rounded-xl inline-block mt-2 font-bold uppercase tracking-wide border border-red-100">
+              <p className="text-[10px] text-blue-700 bg-blue-50 py-1.5 px-3 rounded-xl inline-block mt-2 font-bold uppercase tracking-wide border border-blue-100">
                 ⚠️ ini akan menghapus semua log presensi hari ini!
               </p>
             </div>
@@ -897,7 +897,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setShowClearPresensiConfirm(false)}
-                className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-650 rounded-xl py-2.5 font-bold text-xs transition-all cursor-pointer"
+                className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-655 rounded-xl py-2.5 font-bold text-xs transition-all cursor-pointer"
               >
                 Batal
               </button>
@@ -909,7 +909,7 @@ export default function App() {
                   setShowClearPresensiConfirm(false);
                   triggerNotice('Semua data presensi harian berhasil diset ulang.');
                 }}
-                className="flex-1 bg-red-700 hover:bg-red-800 text-white rounded-xl py-2.5 font-bold text-xs transition-all shadow-md cursor-pointer"
+                className="flex-1 bg-blue-700 hover:bg-blue-800 text-white rounded-xl py-2.5 font-bold text-xs transition-all shadow-md cursor-pointer"
               >
                 Ya, Bersihkan
               </button>

@@ -124,8 +124,8 @@ export default function KepsekPanel({ siswaList, presensiList }: KepsekPanelProp
       
       {/* EXPORT FAILURE NOTICE */}
       {exportError && (
-        <div className="p-4 bg-red-55 px-5 bg-red-50 border border-red-200 text-red-800 rounded-2xl flex items-center gap-2.5 text-xs font-semibold shadow-sm animate-in fade-in duration-200">
-          <AlertTriangle className="w-4 h-4 text-red-700 shrink-0" />
+        <div className="p-4 px-5 bg-blue-50 border border-blue-200 text-blue-800 rounded-2xl flex items-center gap-2.5 text-xs font-semibold shadow-sm animate-in fade-in duration-200">
+          <AlertTriangle className="w-4 h-4 text-blue-700 shrink-0" />
           <span>{exportError}</span>
         </div>
       )}
@@ -175,7 +175,7 @@ export default function KepsekPanel({ siswaList, presensiList }: KepsekPanelProp
       {/* FILTER PANEL BANNER */}
       <div className="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 animate-in fade-in-50 duration-200">
         <div className="flex items-center gap-2">
-          <Calendar className="w-4.5 h-4.5 text-red-700" />
+          <Calendar className="w-4.5 h-4.5 text-blue-700" />
           <span className="text-xs font-bold text-slate-700 uppercase tracking-wide font-display">Horizon Laporan:</span>
         </div>
 
@@ -188,7 +188,7 @@ export default function KepsekPanel({ siswaList, presensiList }: KepsekPanelProp
                 onClick={() => setFilterType(type)}
                 className={`py-1.5 px-3.5 rounded-lg font-bold transition-all uppercase tracking-wider text-[10px] cursor-pointer ${
                   filterType === type
-                    ? 'bg-red-700 text-white shadow-md'
+                    ? 'bg-blue-700 text-white shadow-md'
                     : 'text-slate-600 hover:bg-slate-200'
                 }`}
               >
@@ -203,7 +203,7 @@ export default function KepsekPanel({ siswaList, presensiList }: KepsekPanelProp
             <select
               value={selectedKelas}
               onChange={(e) => setSelectedKelas(e.target.value)}
-              className="bg-white border border-gray-300 rounded-xl py-1.5 px-3 text-xs focus:outline-none focus:ring-2 focus:ring-red-700 font-semibold text-slate-700"
+              className="bg-white border border-gray-300 rounded-xl py-1.5 px-3 text-xs focus:outline-none focus:ring-2 focus:ring-blue-700 font-semibold text-slate-700"
             >
               <option value="Semua Kelas">Semua Kelas 1-6</option>
               {DAFTAR_KELAS.map((k) => (
@@ -250,7 +250,7 @@ export default function KepsekPanel({ siswaList, presensiList }: KepsekPanelProp
 
         {/* CARD 4: ABSENTEE (Sakit/Izin/Alfa Group) */}
         <div className="bg-white border border-gray-100 p-4 rounded-3xl shadow-xs flex flex-col justify-between text-left">
-          <span className="text-[10px] uppercase font-black text-red-700 bg-red-50 px-2 py-0.5 rounded-full inline-block self-start">IJIN/SAKIT</span>
+          <span className="text-[10px] uppercase font-black text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full inline-block self-start">IJIN/SAKIT</span>
           <h4 className="text-3xl font-black text-slate-800 tracking-tight mt-3">{jmlIzin + jmlSakit}</h4>
           <span className="text-[10px] text-gray-400 mt-1 block">Sakit: {jmlSakit} | Izin: {jmlIzin}</span>
         </div>
@@ -270,7 +270,7 @@ export default function KepsekPanel({ siswaList, presensiList }: KepsekPanelProp
         {/* Visual attendance ratios by kelas 1-6 (5 cols) */}
         <div className="lg:col-span-5 bg-white p-5 rounded-3xl border border-slate-205 shadow-sm space-y-4">
           <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5 font-display">
-            <Layers className="w-4.5 h-4.5 text-red-700 animate-pulse" />
+            <Layers className="w-4.5 h-4.5 text-blue-700 animate-pulse" />
             Rasio Kehadiran Per Rombel Kelas 1-6
           </h3>
 
@@ -289,11 +289,11 @@ export default function KepsekPanel({ siswaList, presensiList }: KepsekPanelProp
                 <div key={curKelasName} className="space-y-1">
                   <div className="flex justify-between items-center text-xs">
                     <span className="font-bold text-slate-700">{curKelasName} ({totalPupils} Siswa)</span>
-                    <span className="font-mono font-black text-red-700">{safePercent}% Hadir</span>
+                    <span className="font-mono font-black text-blue-700">{safePercent}% Hadir</span>
                   </div>
                   <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden border border-slate-200">
                     <div 
-                      className="bg-red-700 h-full rounded-full transition-all duration-300" 
+                      className="bg-blue-700 h-full rounded-full transition-all duration-300" 
                       style={{ width: `${safePercent}%` }} 
                     />
                   </div>
@@ -338,7 +338,7 @@ export default function KepsekPanel({ siswaList, presensiList }: KepsekPanelProp
                         ? 'bg-amber-100 text-amber-800 animate-pulse'
                         : p.status === 'Sakit'
                         ? 'bg-indigo-150 text-indigo-850 font-bold'
-                        : 'bg-red-50 text-red-800 font-extrabold border border-red-200';
+                        : 'bg-blue-50 text-blue-800 font-extrabold border border-blue-200';
 
                     return (
                       <tr key={p.id} className="hover:bg-slate-50 border-b border-gray-100">

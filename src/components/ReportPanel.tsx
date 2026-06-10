@@ -352,7 +352,7 @@ export default function ReportPanel({ siswaList, presensiList }: ReportPanelProp
       <div className="bg-white rounded-3xl p-6 border border-slate-150 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="text-left">
           <div className="flex items-center gap-2">
-            <span className="text-[10px] bg-red-100 text-red-700 px-2.5 py-0.5 rounded-full font-black uppercase tracking-widest leading-none">
+            <span className="text-[10px] bg-blue-100 text-blue-700 px-2.5 py-0.5 rounded-full font-black uppercase tracking-widest leading-none">
               Fitur Premium
             </span>
             <span className="text-[10px] bg-sky-100 text-sky-800 px-2.5 py-0.5 rounded-full font-black uppercase tracking-widest leading-none flex items-center gap-1">
@@ -360,7 +360,7 @@ export default function ReportPanel({ siswaList, presensiList }: ReportPanelProp
             </span>
           </div>
           <h2 className="text-2xl font-black text-slate-800 tracking-tight mt-1.5 flex items-center gap-2">
-            <FileSpreadsheet className="w-6 h-6 text-red-600 shrink-0" />
+            <FileSpreadsheet className="w-6 h-6 text-blue-600 shrink-0" />
             <span>Pusat Laporan & Rekap Absensi</span>
           </h2>
           <p className="text-gray-500 text-xs mt-1.5">
@@ -387,7 +387,7 @@ export default function ReportPanel({ siswaList, presensiList }: ReportPanelProp
             onClick={() => setActiveTab('harian')}
             className={`flex-1 xl:flex-none py-2 px-4 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
               activeTab === 'harian'
-                ? 'bg-red-700 text-white shadow-sm'
+                ? 'bg-blue-700 text-white shadow-sm'
                 : 'text-slate-650 hover:text-slate-800'
             }`}
           >
@@ -397,7 +397,7 @@ export default function ReportPanel({ siswaList, presensiList }: ReportPanelProp
             onClick={() => setActiveTab('mingguan')}
             className={`flex-1 xl:flex-none py-2 px-4 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
               activeTab === 'mingguan'
-                ? 'bg-red-700 text-white shadow-sm'
+                ? 'bg-blue-700 text-white shadow-sm'
                 : 'text-slate-650 hover:text-slate-800'
             }`}
           >
@@ -407,7 +407,7 @@ export default function ReportPanel({ siswaList, presensiList }: ReportPanelProp
             onClick={() => setActiveTab('bulanan')}
             className={`flex-1 xl:flex-none py-2 px-4 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
               activeTab === 'bulanan'
-                ? 'bg-red-700 text-white shadow-sm'
+                ? 'bg-blue-700 text-white shadow-sm'
                 : 'text-slate-650 hover:text-slate-800'
             }`}
           >
