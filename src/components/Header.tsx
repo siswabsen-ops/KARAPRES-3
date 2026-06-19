@@ -1,4 +1,5 @@
 import { Database, Flame, Wifi, RefreshCw } from 'lucide-react';
+import { motion } from 'motion/react';
 import { User } from '../types';
 
 const schoolLogo = '/src/assets/images/mascot_digiwangi_yellow_chick_1781079002921.png';
@@ -28,8 +29,8 @@ export default function Header({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col md:flex-row items-center justify-between gap-4">
         {/* Logo & School Title */}
         <div className="flex items-center gap-4 select-none self-start md:self-auto">
-          {/* Circular Shield Logo block */}
-          <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center p-0.5 shadow-md border border-blue-100 shrink-0 overflow-hidden">
+          {/* Circular Shield Logo block with playful hover scaling */}
+          <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center p-0.5 shadow-md border border-blue-100 shrink-0 overflow-hidden transform hover:scale-110 hover:rotate-6 transition-all duration-300 cursor-pointer">
             <img 
               src={schoolLogo} 
               alt="Logo DIGIWANGI 3" 
@@ -48,7 +49,32 @@ export default function Header({
               </span>
             </div>
             <h1 className="text-2xl font-black text-white tracking-tighter leading-none mt-1 flex items-center gap-2">
-              <span>DIGIWANGI 3</span>
+              <span className="flex items-center gap-[0.5px]">
+                {Array.from("DIGIWANGI 3").map((char, index) => (
+                  <motion.span
+                    key={index}
+                    className="inline-block hover:text-amber-300 transition-colors cursor-pointer select-none"
+                    animate={{
+                      y: [0, -3.5, 0],
+                      scale: [1, 1.05, 1],
+                      textShadow: [
+                        "0 0 0px rgba(255,255,255,0)",
+                        "0 0 8px rgba(147,197,253,0.6)",
+                        "0 0 0px rgba(255,255,255,0)",
+                      ]
+                    }}
+                    transition={{
+                      repeat: Infinity,
+                      duration: 3.2,
+                      ease: "easeInOut",
+                      delay: index * 0.12,
+                    }}
+                    whileHover={{ scale: 1.3, y: -6, color: "#fbbf24" }}
+                  >
+                    {char === ' ' ? '\u00A0' : char}
+                  </motion.span>
+                ))}
+              </span>
               <span className="text-blue-300 font-extralight text-lg">|</span>
               <span className="text-xs font-semibold text-blue-100 tracking-wide self-end mb-0.5">
                 Presensi & Notifikasi Terpadu

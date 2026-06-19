@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Shield, Key, Eye, EyeOff, Check, AlertCircle, Info, Lock } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { User } from '../types';
+
+const schoolLogo = '/src/assets/images/mascot_digiwangi_yellow_chick_1781079002921.png';
 
 interface LoginScreenProps {
   onLoginSuccess: (user: User) => void;
@@ -12,6 +15,47 @@ export default function LoginScreen({ onLoginSuccess, accountsList }: LoginScree
   const [pin, setPin] = useState('');
   const [showPin, setShowPin] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [activeSlide, setActiveSlide] = useState(0);
+
+  // Promo slides content showcasing SDN 3 Karamatwangi
+  const promoSlides = [
+    {
+      title: "PRESISI QR KODE KILAT",
+      desc: "Pindai kartu QR Code Anda ke depan kamera laptop atau HP! Kehadiran terekam dalam < 1 detik super cepat.",
+      icon: "⚡",
+      badge: "QUICK SCAN"
+    },
+    {
+      title: "NOTIFIKASI WHATSAPP",
+      desc: "Orang tua tenang & terbantu! Kirim konfirmasi kehadiran otomatis langsung ke handphone wali murid seketika.",
+      icon: "💬",
+      badge: "INTEGRASI WA"
+    },
+    {
+      title: "SINKRONISASI EVALUASI",
+      desc: "Terbuka lewat awan! Saling terhubung HP & Laptop. Entry guru piket ter-update real-time ke wali kelas & kepsek.",
+      icon: "☁️",
+      badge: "CLOUD SYNC"
+    },
+    {
+      title: "SISTEM LAPORAN TERPADU",
+      desc: "Unduh file rekapitulasi presensi harian & bulanan siap cetak dalam satu klik agar administrasi sekolah lancar.",
+      icon: "📊",
+      badge: "ANALITIK LAPORAN"
+    }
+  ];
+
+  // Auto scroll promo slides
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveSlide((prev) => (prev + 1) % promoSlides.length);
+    }, 4500);
+    return () => clearInterval(interval);
+  }, []);
+
+  const triggerMascotTrick = () => {
+    setActiveSlide((prev) => (prev + 1) % promoSlides.length);
+  };
 
   // Manual login handler
   const handleManualLogin = (e: React.FormEvent) => {
@@ -46,39 +90,148 @@ export default function LoginScreen({ onLoginSuccess, accountsList }: LoginScree
       <div className="absolute bottom-10 right-10 w-96 h-96 bg-blue-50/30 rounded-full blur-3xl animate-pulse" />
 
       <div className="max-w-4xl w-full grid grid-cols-1 md:grid-cols-12 bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden relative z-10 animate-in fade-in-50 duration-300">
-        {/* Left Aspect: Branding & Information (School Theme) */}
-        <div className="md:col-span-5 bg-gradient-to-br from-blue-800 via-blue-700 to-indigo-900 p-8 text-white flex flex-col justify-between relative">
+        {/* Left Aspect: Branding & Information (School Theme with Animated Mascot Promo) */}
+        <div className="md:col-span-5 bg-gradient-to-br from-blue-800 via-blue-700 to-indigo-900 p-8 text-white flex flex-col justify-between relative overflow-hidden">
           {/* Elegant top right badge */}
-          <div className="absolute top-0 right-0 p-3">
+          <div className="absolute top-0 right-0 p-3 z-10">
             <span className="text-[9px] bg-white/10 backdrop-blur-md text-blue-100 font-bold px-2 py-0.5 rounded-full border border-white/20 uppercase tracking-widest">
               PRIMARY ED
             </span>
           </div>
 
-          <div>
-            <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-md border border-white/20 shadow-inner mb-6">
-              <Shield className="w-8 h-8 text-blue-100" />
+          <div className="relative z-10">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center backdrop-blur-md border border-white/20 shadow-inner shrink-0">
+                <Shield className="w-5 h-5 text-blue-100" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-black tracking-tighter leading-none font-display flex items-center gap-[0.5px]">
+                  {Array.from("DIGIWANGI 3").map((char, index) => (
+                    <motion.span
+                      key={index}
+                      className="inline-block hover:text-amber-300 transition-colors cursor-pointer select-none"
+                      animate={{
+                        y: [0, -3.5, 0],
+                        scale: [1, 1.05, 1],
+                        textShadow: [
+                          "0 0 0px rgba(255,255,255,0)",
+                          "0 0 8px rgba(147,197,253,0.4)",
+                          "0 0 0px rgba(255,255,255,0)",
+                        ]
+                      }}
+                      transition={{
+                        repeat: Infinity,
+                        duration: 3.2,
+                        ease: "easeInOut",
+                        delay: index * 0.12,
+                      }}
+                      whileHover={{ scale: 1.3, y: -5, color: "#fbbf24" }}
+                    >
+                      {char === ' ' ? '\u00A0' : char}
+                    </motion.span>
+                  ))}
+                </h2>
+                <p className="text-[9px] font-semibold text-blue-200 mt-1 uppercase tracking-widest leading-none">Digital Karamatwangi 3</p>
+              </div>
             </div>
-            <h2 className="text-3xl font-black tracking-tighter leading-none font-display">DIGIWANGI 3</h2>
-            <p className="text-sm font-semibold text-blue-200 mt-2 font-display uppercase tracking-widest">Digital Karamatwangi 3</p>
-            <p className="text-xs text-blue-205/90 mt-1.5 leading-relaxed">
-              Sistem manajemen kehadiran digital handal SDN 3 Karamatwangi, Kecamatan Cisurupan, Kabupaten Garut.
+            <p className="text-[10px] text-blue-100/80 leading-tight">
+              Sistem manajemen kehadiran digital handal SDN 3 Karamatwangi, Kec. Cisurupan, Garut.
             </p>
           </div>
 
-          <div className="space-y-4 my-8">
-            <div className="p-4 bg-blue-950/40 rounded-2xl border border-white/10 backdrop-blur-sm text-xs leading-relaxed">
-              <h4 className="font-bold mb-1 flex items-center gap-1.5 text-white">
-                <Info className="w-4 h-4 text-amber-300" />
-                Catatan Pengoperasian:
-              </h4>
-              <p className="text-blue-100 text-[11px]">
-                Aplikasi mendukung sinkronisasi data dwi-perangkat HP (Android/iOS) dan Laptop/PC secara seketika (real-time).
+          {/* CHERISHED ANIMATED MASCOT PROMO BOX */}
+          <div className="my-auto py-5 flex flex-col items-center justify-center relative z-10">
+            {/* Spinning Glow Backdrop */}
+            <div className="absolute w-40 h-40 bg-blue-500/25 rounded-full blur-3xl animate-pulse" />
+            <div className="absolute w-28 h-28 border border-white/10 bg-blue-400/5 rounded-full -z-10 animate-[spin_15s_linear_infinite]" />
+            
+            {/* Floating and Bouncing Mascot */}
+            <motion.div
+              animate={{ 
+                y: [0, -10, 0],
+                rotate: [-1.5, 1.5, -1.5],
+                scale: [1, 1.015, 1]
+              }}
+              transition={{ 
+                repeat: Infinity, 
+                duration: 4.5, 
+                ease: "easeInOut" 
+              }}
+              whileHover={{ scale: 1.08, rotate: 3 }}
+              onClick={triggerMascotTrick}
+              className="relative w-32 h-32 cursor-pointer transform transition-all select-none drop-shadow-[0_10px_15px_rgba(30,58,138,0.4)]"
+              title="Klik aku untuk melihat keunggulan!"
+            >
+              <img 
+                src={schoolLogo} 
+                alt="Mascot DigiWangi 3" 
+                referrerPolicy="no-referrer"
+                className="w-full h-full object-contain"
+              />
+              
+              {/* Floating Little Sparkle Label */}
+              <div className="absolute -top-1 -right-2 bg-amber-400 text-slate-950 font-black text-[9px] px-2 py-0.5 rounded-full shadow-md border border-amber-300 animate-bounce leading-none">
+                PROMO ✨
+              </div>
+            </motion.div>
+
+            {/* Bubble chat box */}
+            <div className="mt-4 w-full relative">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeSlide}
+                  initial={{ opacity: 0, y: 15, scale: 0.96 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -15, scale: 0.96 }}
+                  transition={{ duration: 0.3, ease: 'easeOut' }}
+                  className="bg-white/10 backdrop-blur-md border border-white/15 p-3.5 rounded-2xl relative shadow-lg text-left"
+                >
+                  {/* Talk tail pointer pointing upwards */}
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-full w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-b-[6px] border-b-white/10" />
+
+                  <div className="flex items-center gap-1.5 mb-1.5">
+                    <span className="text-xs">{promoSlides[activeSlide].icon}</span>
+                    <span className="text-[8px] font-black tracking-widest text-amber-300 uppercase">
+                      {promoSlides[activeSlide].badge}
+                    </span>
+                  </div>
+                  <h4 className="text-xs font-black text-white font-display uppercase tracking-tight leading-none mb-1">
+                    {promoSlides[activeSlide].title}
+                  </h4>
+                  <p className="text-[10px] text-blue-105/90 leading-relaxed font-semibold">
+                    {promoSlides[activeSlide].desc}
+                  </p>
+                </motion.div>
+              </AnimatePresence>
+
+              {/* Slide Navigation Dots */}
+              <div className="flex items-center justify-center gap-1.5 mt-2.5">
+                {promoSlides.map((_, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setActiveSlide(idx)}
+                    className={`h-1.5 rounded-full transition-all duration-300 ${
+                      activeSlide === idx 
+                        ? 'w-5 bg-amber-400' 
+                        : 'w-1.5 bg-white/30 hover:bg-white/55'
+                    }`}
+                    title={`Lihat Fitur ${idx + 1}`}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4 my-1 relative z-10">
+            <div className="py-2 px-3 bg-blue-950/45 rounded-xl border border-white/5 backdrop-blur-xs text-center">
+              <p className="text-blue-150 text-[10px] font-bold">
+                💡 Ketuk Maskot Pintar kami di atas untuk tips instan
               </p>
             </div>
           </div>
 
-          <div className="text-[10px] text-blue-200 border-t border-blue-500/20 pt-4 flex items-center justify-between">
+          <div className="text-[10px] text-blue-200 border-t border-blue-500/20 pt-3 flex items-center justify-between relative z-10">
             <span>SDN 3 Karamatwangi © 2026</span>
             <span className="font-mono bg-white/10 px-1.5 py-0.5 rounded">GARUT</span>
           </div>

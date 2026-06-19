@@ -41,6 +41,7 @@ import KepsekPanel from './components/KepsekPanel';
 import GuruPanel from './components/GuruPanel';
 import PiketPanel from './components/PiketPanel';
 import WhatsAppSimulator from './components/WhatsAppSimulator';
+import MascotPromoAssistant from './components/MascotPromoAssistant';
 import ReportPanel from './components/ReportPanel';
 import {
   FileText,
@@ -844,6 +845,9 @@ export default function App() {
 
       {/* Floating simulator component */}
       <WhatsAppSimulator logs={presensiList} onClearLogs={() => setPresensiList([])} />
+
+      {/* Floating Mascot Promo Companion Assistant */}
+      <MascotPromoAssistant />
 
       {/* FOOTER */}
       <footer className="bg-slate-900 text-slate-400 py-6 border-t border-slate-800 text-xs">
