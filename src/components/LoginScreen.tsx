@@ -137,6 +137,14 @@ export default function LoginScreen({ onLoginSuccess, accountsList }: LoginScree
             <p className="text-[10px] text-blue-100/80 leading-tight">
               Sistem manajemen kehadiran digital handal SDN 3 Karamatwangi, Kec. Cisurupan, Garut.
             </p>
+            
+            {/* Elegant Luxury Slogan Badges */}
+            <div className="mt-4 pt-3 border-t border-white/10 flex flex-wrap gap-1.5 justify-start">
+              <span className="text-[9px] font-black bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-400 text-slate-950 px-2 py-0.5 rounded-md shadow-md shadow-amber-500/10 uppercase tracking-wider">⚡ Cepat</span>
+              <span className="text-[9px] font-black bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-400 text-slate-950 px-2 py-0.5 rounded-md shadow-md shadow-amber-500/10 uppercase tracking-wider">🎯 Akurat</span>
+              <span className="text-[9px] font-black bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-400 text-slate-950 px-2 py-0.5 rounded-md shadow-md shadow-amber-500/10 uppercase tracking-wider">👁️ Transparansi</span>
+              <span className="text-[9px] font-black bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-400 text-slate-950 px-2 py-0.5 rounded-md shadow-md shadow-amber-500/10 uppercase tracking-wider">🛡️ Terintegritas</span>
+            </div>
           </div>
 
           {/* CHERISHED ANIMATED MASCOT PROMO BOX */}

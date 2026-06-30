@@ -554,73 +554,119 @@ export default function App() {
         isSyncing={isSyncing}
       />
 
-      {/* Primary Sub-Nav (Mode Tabs) */}
-      <div className="bg-white border-b border-gray-250 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-1.5 overflow-x-auto">
-            {/* Tab 1: Absensi Scan */}
-            <button
-              onClick={() => setCurrentView('scan')}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
-                currentView === 'scan'
-                  ? 'bg-gradient-to-r from-blue-700 to-indigo-900 text-white shadow-md hover:shadow-lg shadow-indigo-950/20'
-                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-              }`}
-            >
-              <Camera className="w-4 h-4" />
-              Presensi Scan QR Code
-            </button>
-
-            {/* Tab 2: Manajemen Console */}
-            <button
-              onClick={() => {
-                setCurrentView('manajemen');
-              }}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
-                currentView === 'manajemen'
-                  ? 'bg-gradient-to-r from-blue-700 to-indigo-900 text-white shadow-md hover:shadow-lg shadow-indigo-950/20'
-                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-              }`}
-            >
-              <Layers className="w-4 h-4" />
-              Halaman Manajemen ({currentUser ? currentUser.role.toUpperCase() : 'Login'})
-            </button>
-
-            {/* Tab 2.5: Rekap Laporan */}
-            <button
-              onClick={() => setCurrentView('laporan')}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
-                currentView === 'laporan'
-                  ? 'bg-gradient-to-r from-blue-700 to-indigo-900 text-white shadow-md hover:shadow-lg shadow-indigo-950/20'
-                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-              }`}
-            >
-              <FileSpreadsheet className="w-4 h-4" />
-              Laporan & Rekapitulasi
-            </button>
-
-            {/* Tab 3: Panduan Sistem */}
-            <button
-              onClick={() => setCurrentView('panduan')}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
-                currentView === 'panduan'
-                  ? 'bg-gradient-to-r from-blue-700 to-indigo-900 text-white shadow-md hover:shadow-lg shadow-indigo-950/20'
-                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-              }`}
-            >
-              <BookOpen className="w-4 h-4" />
-              Buku Panduan & Setup
-            </button>
+      {/* Slogan Ticker Bar under Header for Premium Vibe */}
+      <div className="bg-gradient-to-r from-amber-500/10 via-blue-500/10 to-indigo-500/10 border-b border-slate-200 py-2.5 px-4">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-y-2 text-xs">
+          <div className="flex items-center gap-1.5 font-bold text-slate-500">
+            <span>SDN 3 Karamatwangi, Cisurupan, Garut</span>
+            <span className="text-slate-300">•</span>
+            <span className="text-blue-700 uppercase font-extrabold tracking-wider">Aplikasi Resmi DIGIWANGI 3</span>
           </div>
-
-          <div className="text-[11px] text-slate-500 font-bold hidden md:block">
-            SDN 3 Karamatwangi, Cisurupan, Garut • <span className="text-blue-700 font-extrabold uppercase tracking-wider">Terbuka Online</span>
+          <div className="flex flex-wrap items-center justify-center gap-2 md:gap-4">
+            <span className="text-[10px] bg-slate-200/60 text-slate-700 font-extrabold px-2 py-0.5 rounded-full uppercase tracking-widest font-mono">SLOGAN:</span>
+            <div className="flex items-center gap-3">
+              <span className="font-extrabold text-blue-900 uppercase tracking-wide">⚡ Cepat</span>
+              <span className="text-amber-500 font-bold">•</span>
+              <span className="font-extrabold text-blue-900 uppercase tracking-wide">🎯 Akurat</span>
+              <span className="text-amber-500 font-bold">•</span>
+              <span className="font-extrabold text-blue-900 uppercase tracking-wide">👁️ Transparansi</span>
+              <span className="text-amber-500 font-bold">•</span>
+              <span className="font-extrabold text-blue-900 uppercase tracking-wide">🛡️ Terintegritas</span>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* PRIMARY CONTROLLER PORTAL */}
-      <main className="flex-1">
+      {/* Main Sidebar and Content Layout */}
+      <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 flex flex-col lg:flex-row gap-6">
+        
+        {/* SIDEBAR NAVIGATION COLUMN */}
+        <aside className="w-full lg:w-64 shrink-0">
+          <div className="bg-gradient-to-b from-[#0b1329] via-[#14234c] to-[#1b3d6d] text-white rounded-3xl p-5 border border-indigo-950/80 shadow-xl flex flex-col justify-between h-auto min-h-[380px] lg:sticky lg:top-24">
+            <div className="space-y-6">
+              <div>
+                <span className="text-[9px] font-black text-amber-400 bg-amber-950/40 border border-amber-500/30 px-2.5 py-0.5 rounded-full uppercase tracking-widest font-display">
+                  SISTEM MENU
+                </span>
+                <h3 className="text-[11px] text-slate-300 font-extrabold mt-2 uppercase tracking-wider">LAYANAN FITUR</h3>
+              </div>
+
+              {/* Navigation Actions Stack */}
+              <div className="space-y-2.5">
+                {/* Tab 1: Absensi Scan */}
+                <button
+                  onClick={() => setCurrentView('scan')}
+                  className={`w-full flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-xs font-black tracking-wide transition-all uppercase text-left cursor-pointer border ${
+                    currentView === 'scan'
+                      ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 border-amber-300 shadow-lg shadow-amber-500/20'
+                      : 'text-slate-300 hover:bg-white/5 border-transparent hover:text-white'
+                  }`}
+                >
+                  <Camera className={`w-5 h-5 shrink-0 ${currentView === 'scan' ? 'text-slate-950' : 'text-blue-400'}`} />
+                  <span>PRESENSI SCAN QR CODE</span>
+                </button>
+
+                {/* Tab 2: Halaman Manajemen (Admin) */}
+                <button
+                  onClick={() => setCurrentView('manajemen')}
+                  className={`w-full flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-xs font-black tracking-wide transition-all uppercase text-left cursor-pointer border ${
+                    currentView === 'manajemen'
+                      ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 border-amber-300 shadow-lg shadow-amber-500/20'
+                      : 'text-slate-300 hover:bg-white/5 border-transparent hover:text-white'
+                  }`}
+                >
+                  <Layers className={`w-5 h-5 shrink-0 ${currentView === 'manajemen' ? 'text-slate-950' : 'text-blue-400'}`} />
+                  <div>
+                    <span>HALAMAN MANAJEMEN</span>
+                    <span className="block text-[9px] opacity-75 font-mono lowercase mt-0.5">
+                      ({currentUser ? currentUser.role : 'operator login'})
+                    </span>
+                  </div>
+                </button>
+
+                {/* Tab 2.5: Rekap Laporan */}
+                <button
+                  onClick={() => setCurrentView('laporan')}
+                  className={`w-full flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-xs font-black tracking-wide transition-all uppercase text-left cursor-pointer border ${
+                    currentView === 'laporan'
+                      ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 border-amber-300 shadow-lg shadow-amber-500/20'
+                      : 'text-slate-300 hover:bg-white/5 border-transparent hover:text-white'
+                  }`}
+                >
+                  <FileSpreadsheet className={`w-5 h-5 shrink-0 ${currentView === 'laporan' ? 'text-slate-950' : 'text-blue-400'}`} />
+                  <span>LAPORAN & REKAPITULASI</span>
+                </button>
+
+                {/* Tab 3: Panduan Sistem */}
+                <button
+                  onClick={() => setCurrentView('panduan')}
+                  className={`w-full flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-xs font-black tracking-wide transition-all uppercase text-left cursor-pointer border ${
+                    currentView === 'panduan'
+                      ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 border-amber-300 shadow-lg shadow-amber-500/20'
+                      : 'text-slate-300 hover:bg-white/5 border-transparent hover:text-white'
+                  }`}
+                >
+                  <BookOpen className={`w-5 h-5 shrink-0 ${currentView === 'panduan' ? 'text-slate-950' : 'text-blue-400'}`} />
+                  <span>Buku Panduan & Setup</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Sidebar Bottom branding / info */}
+            <div className="border-t border-white/5 pt-4 mt-6">
+              <p className="text-[10px] text-slate-400 font-bold leading-normal">
+                SDN 3 Karamatwangi
+              </p>
+              <div className="flex items-center gap-1.5 mt-1">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                <span className="text-[9px] text-slate-300 font-black tracking-widest uppercase">AKTIF DIGITAL</span>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        {/* PRIMARY CONTROLLER PORTAL */}
+        <main className="flex-1 min-w-0">
         {/* VIEW 1: PRENSENSI SCAN */}
         {currentView === 'scan' && (
           <div className="py-2">
@@ -842,6 +888,7 @@ export default function App() {
           </div>
         )}
       </main>
+    </div>
 
       {/* Floating simulator component */}
       <WhatsAppSimulator logs={presensiList} onClearLogs={() => setPresensiList([])} />
