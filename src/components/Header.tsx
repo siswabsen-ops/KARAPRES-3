@@ -22,7 +22,7 @@ export default function Header({
   isSyncing = false
 }: HeaderProps) {
   return (
-    <header className="sticky top-0 z-30 bg-blue-700 text-white shadow-lg border-b border-blue-850">
+    <header className="sticky top-0 z-30 bg-gradient-to-r from-blue-950 via-[#111e40] to-[#0c152b] text-white shadow-xl border-b border-indigo-950/80">
       {/* Blue & White Fine Motif Accent */}
       <div className="h-1 w-full bg-white opacity-20" />
 

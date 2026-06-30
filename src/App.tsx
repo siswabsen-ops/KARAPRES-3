@@ -563,7 +563,7 @@ export default function App() {
               onClick={() => setCurrentView('scan')}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
                 currentView === 'scan'
-                  ? 'bg-blue-700 text-white shadow-md'
+                  ? 'bg-gradient-to-r from-blue-700 to-indigo-900 text-white shadow-md hover:shadow-lg shadow-indigo-950/20'
                   : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
               }`}
             >
@@ -578,7 +578,7 @@ export default function App() {
               }}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
                 currentView === 'manajemen'
-                  ? 'bg-blue-700 text-white shadow-md'
+                  ? 'bg-gradient-to-r from-blue-700 to-indigo-900 text-white shadow-md hover:shadow-lg shadow-indigo-950/20'
                   : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
               }`}
             >
@@ -591,7 +591,7 @@ export default function App() {
               onClick={() => setCurrentView('laporan')}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
                 currentView === 'laporan'
-                  ? 'bg-blue-700 text-white shadow-md'
+                  ? 'bg-gradient-to-r from-blue-700 to-indigo-900 text-white shadow-md hover:shadow-lg shadow-indigo-950/20'
                   : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
               }`}
             >
@@ -604,7 +604,7 @@ export default function App() {
               onClick={() => setCurrentView('panduan')}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
                 currentView === 'panduan'
-                  ? 'bg-blue-700 text-white shadow-md'
+                  ? 'bg-gradient-to-r from-blue-700 to-indigo-900 text-white shadow-md hover:shadow-lg shadow-indigo-950/20'
                   : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
               }`}
             >

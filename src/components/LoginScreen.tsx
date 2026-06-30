@@ -86,12 +86,12 @@ export default function LoginScreen({ onLoginSuccess, accountsList }: LoginScree
   return (
     <div className="min-h-[calc(100vh-80px)] flex items-center justify-center bg-slate-50 px-4 py-12 relative overflow-hidden">
       {/* Visual background decoration items */}
-      <div className="absolute top-10 left-10 w-72 h-72 bg-blue-100/40 rounded-full blur-3xl animate-pulse" />
-      <div className="absolute bottom-10 right-10 w-96 h-96 bg-blue-50/30 rounded-full blur-3xl animate-pulse" />
+      <div className="absolute top-10 left-10 w-72 h-72 bg-indigo-500/10 rounded-full blur-3xl animate-pulse" />
+      <div className="absolute bottom-10 right-10 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl animate-pulse" />
 
       <div className="max-w-4xl w-full grid grid-cols-1 md:grid-cols-12 bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden relative z-10 animate-in fade-in-50 duration-300">
         {/* Left Aspect: Branding & Information (School Theme with Animated Mascot Promo) */}
-        <div className="md:col-span-5 bg-gradient-to-br from-blue-800 via-blue-700 to-indigo-900 p-8 text-white flex flex-col justify-between relative overflow-hidden">
+        <div className="md:col-span-5 bg-gradient-to-br from-[#0b1329] via-[#14234c] to-[#1b3d6d] p-8 text-white flex flex-col justify-between relative overflow-hidden">
           {/* Elegant top right badge */}
           <div className="absolute top-0 right-0 p-3 z-10">
             <span className="text-[9px] bg-white/10 backdrop-blur-md text-blue-100 font-bold px-2 py-0.5 rounded-full border border-white/20 uppercase tracking-widest">

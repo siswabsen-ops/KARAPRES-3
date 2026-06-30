@@ -251,44 +251,152 @@ export default function AdminPanel({
     displayNotice('success', 'Seluruh konfigurasi sistem berhasil disimpan dan disinkronkan.');
   };
 
-  // Print trigger for printing student ID wrapper
+  // Print trigger for printing student ID wrapper without page reload
   const triggerPrintWindow = (elementId: string) => {
     const printContent = document.getElementById(elementId);
     if (!printContent) return;
 
-    const originalContent = document.body.innerHTML;
-    // Simple custom print frame rendering
-    document.body.innerHTML = `
+    // Extract canvas pixels as image data URL so it displays in printing
+    const canvas = printContent.querySelector('canvas');
+    let qrImageHtml = '';
+    if (canvas) {
+      try {
+        const qrImageUrl = (canvas as HTMLCanvasElement).toDataURL('image/png');
+        qrImageHtml = `<img src="${qrImageUrl}" style="width: 170px; height: 170px; object-fit: contain; image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;" />`;
+      } catch (err) {
+        console.error('Gagal mengekstrak QR Code Canvas:', err);
+        qrImageHtml = printContent.innerHTML;
+      }
+    } else {
+      qrImageHtml = printContent.innerHTML;
+    }
+
+    // Create a hidden print iframe to prevent parent page reload & preserve React state
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    document.body.appendChild(iframe);
+
+    const iframeDoc = iframe.contentWindow?.document || iframe.contentDocument;
+    if (!iframeDoc) return;
+
+    iframeDoc.open();
+    iframeDoc.write(`
       <html>
         <head>
-          <title>Kartu Absensi SDN 3 Karamatwangi</title>
+          <title>Kartu Absensi - ${selectedPrintSiswa?.nama || 'Siswa'}</title>
           <style>
-            body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background-white; }
-            .print-card-frame { border: 4px solid #1d4ed8; border-radius: 16px; padding: 24px; width: 350px; text-align: center; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
-            .header-banner { background-color: #1d4ed8; color: white; padding: 10px; font-weight: bold; font-size: 14px; border-radius: 8px; margin-bottom: 20px; }
-            .student-info { margin-top: 15px; font-weight: bold; font-size: 16px; color: #1e293b; }
-            .meta-desc { font-size: 11px; color: #64748b; margin-top: 4px; }
-            .footer-copyright { font-size: 9px; color: #94a3b8; border-top: 1px solid #e2e8f0; margin-top: 20px; padding-top: 8px; }
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=JetBrains+Mono:wght@700&display=swap');
+            @page {
+              size: auto;
+              margin: 0mm;
+            }
+            body { 
+              font-family: 'Inter', sans-serif; 
+              display: flex; 
+              justify-content: center; 
+              align-items: center; 
+              height: 100vh; 
+              margin: 0; 
+              background-color: white; 
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+            .print-card-frame { 
+              border: 3.5px solid #1d4ed8; 
+              border-radius: 20px; 
+              padding: 24px; 
+              width: 320px; 
+              text-align: center; 
+              box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+              box-sizing: border-box;
+              background-color: white;
+            }
+            .header-banner { 
+              background-color: #1d4ed8; 
+              color: white; 
+              padding: 12px 8px; 
+              font-weight: 900; 
+              font-size: 13px; 
+              border-radius: 12px; 
+              margin-bottom: 20px; 
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+              line-height: 1.4;
+            }
+            .qr-container {
+              display: flex; 
+              justify-content: center; 
+              align-items: center;
+              margin: 15px 0;
+              background-color: white;
+            }
+            .student-info { 
+              margin-top: 15px; 
+              font-weight: 900; 
+              font-size: 16px; 
+              color: #1e293b; 
+              text-transform: uppercase;
+              letter-spacing: -0.3px;
+              line-height: 1.2;
+            }
+            .meta-desc { 
+              font-size: 11px; 
+              color: #475569; 
+              margin-top: 6px; 
+              font-weight: 700;
+            }
+            .sub-desc {
+              font-size: 9px;
+              color: #64748b;
+              margin-top: 5px;
+              font-style: italic;
+              font-weight: 500;
+            }
+            .footer-copyright { 
+              font-size: 9px; 
+              color: #94a3b8; 
+              border-top: 1.5px dashed #e2e8f0; 
+              margin-top: 20px; 
+              padding-top: 10px; 
+              font-weight: 600;
+            }
           </style>
         </head>
         <body>
           <div class="print-card-frame">
             <div class="header-banner">KARTU SISWA ELEKTRONIK<br/>SDN 3 KARAMATWANGI</div>
-            <div style="display: flex; justify-content: center; margin: 15px 0;">
-              ${printContent.innerHTML}
+            <div class="qr-container">
+              ${qrImageHtml}
             </div>
-            <div class="student-info">${selectedPrintSiswa?.nama}</div>
-            <div class="meta-desc">NIS: ${selectedPrintSiswa?.nis} • ${selectedPrintSiswa?.kelas}</div>
-            <div class="meta-desc" style="font-style: italic;">Suku Cadang Utama DIGIWANGI 3 App • Kab. Garut</div>
+            <div class="student-info">${selectedPrintSiswa?.nama || ''}</div>
+            <div class="meta-desc">NIS: ${selectedPrintSiswa?.nis || ''} • ${selectedPrintSiswa?.kelas || ''}</div>
+            <div class="sub-desc">Suku Cadang Utama DIGIWANGI 3 App • Kab. Garut</div>
             <div class="footer-copyright">SDN 3 Karamatwangi, Cisurupan, Garut</div>
           </div>
+          <script>
+            window.onload = function() {
+              setTimeout(function() {
+                window.focus();
+                window.print();
+              }, 400);
+            };
+          </script>
         </body>
       </html>
-    `;
-    
-    window.print();
-    // Restore page
-    window.location.reload();
+    `);
+    iframeDoc.close();
+
+    // Safely cleanup the iframe after printing is handled
+    setTimeout(() => {
+      if (document.body.contains(iframe)) {
+        document.body.removeChild(iframe);
+      }
+    }, 12000);
   };
 
   return (
