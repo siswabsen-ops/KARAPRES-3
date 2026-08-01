@@ -260,8 +260,17 @@ export const seedInitialDataIfDocsEmpty = async (
   try {
     // 1. Check Siswa
     const siswaSnap = await getDocs(collection(db, 'siswa'));
-    if (siswaSnap.empty || siswaSnap.size < siswaSource.length) {
-      console.log(`Seeding ${siswaSource.length} students into Cloud Firestore...`);
+    let needsSiswaSeed = siswaSnap.empty || siswaSnap.size < siswaSource.length;
+    if (!needsSiswaSeed && !siswaSnap.empty) {
+      // Sample check if student class distributions match current updated dataset
+      const sampleDoc = siswaSnap.docs.find(d => d.id === 'sis-001')?.data();
+      const sampleSource = siswaSource.find(s => s.id === 'sis-001');
+      if (sampleDoc && sampleSource && sampleDoc.kelas !== sampleSource.kelas) {
+        needsSiswaSeed = true;
+      }
+    }
+    if (needsSiswaSeed) {
+      console.log(`Seeding/Updating ${siswaSource.length} students into Cloud Firestore...`);
       // Since there can be up to 400 students, we chunk writeBatch to 200 items max (Firestore writeBatch limit is 500)
       const chunkSize = 200;
       for (let i = 0; i < siswaSource.length; i += chunkSize) {

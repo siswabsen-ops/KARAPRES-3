@@ -60,15 +60,16 @@ import {
 export default function App() {
   // Real-time local state engine backed by LocalStorage
   const [siswaList, setSiswaList] = useState<Siswa[]>(() => {
-    const cached = localStorage.getItem('karapres3_siswa');
+    const cached = localStorage.getItem('karapres3_siswa_v3');
     if (cached) {
-      const parsed = JSON.parse(cached);
-      if (parsed.length !== SISWA_INITIAL.length) {
-        localStorage.setItem('karapres3_siswa', JSON.stringify(SISWA_INITIAL));
-        return SISWA_INITIAL;
-      }
-      return parsed;
+      try {
+        const parsed = JSON.parse(cached);
+        if (parsed.length === SISWA_INITIAL.length) {
+          return parsed;
+        }
+      } catch {}
     }
+    localStorage.setItem('karapres3_siswa_v3', JSON.stringify(SISWA_INITIAL));
     return SISWA_INITIAL;
   });
 
@@ -263,7 +264,7 @@ export default function App() {
 
   // Sync state modifications to Web Storage
   useEffect(() => {
-    localStorage.setItem('karapres3_siswa', JSON.stringify(siswaList));
+    localStorage.setItem('karapres3_siswa_v3', JSON.stringify(siswaList));
   }, [siswaList]);
 
   useEffect(() => {
@@ -531,7 +532,7 @@ export default function App() {
 
       const updatedStudents = res.students;
       setSiswaList(updatedStudents);
-      localStorage.setItem('karapres3_siswa', JSON.stringify(updatedStudents));
+      localStorage.setItem('karapres3_siswa_v3', JSON.stringify(updatedStudents));
 
       // Batch sync to Firestore cloud database
       await syncAllStudentsToFirestore(updatedStudents);

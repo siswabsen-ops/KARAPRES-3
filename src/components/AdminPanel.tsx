@@ -17,7 +17,7 @@ import {
   UserCheck
 } from 'lucide-react';
 import { Siswa, SystemSettings, ActivityLog, User, Role, DAFTAR_KELAS } from '../types';
-import { DAFTAR_WALI_KELAS } from '../lib/demoData';
+import { DAFTAR_WALI_KELAS, getWaliKelasByKelas } from '../lib/demoData';
 import QRCodeRenderer from './QRCodeRenderer';
 
 interface AdminPanelProps {
@@ -817,8 +817,11 @@ export default function AdminPanel({
                     <div key={targetKelas} className="p-4 bg-slate-50 border border-gray-200 rounded-2xl flex flex-col justify-between">
                       <div>
                         <div className="flex justify-between items-start">
-                          <span className="text-sm font-black text-rose-600">{targetKelas}</span>
-                          <span className="text-[10px] bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full font-bold">
+                          <div>
+                            <span className="text-sm font-black text-rose-600 block">{targetKelas}</span>
+                            <span className="text-[10px] text-slate-500 font-medium">👤 Wali Kelas: {getWaliKelasByKelas(targetKelas)}</span>
+                          </div>
+                          <span className="text-[10px] bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full font-bold shrink-0">
                             {countSiswa} Murid
                           </span>
                         </div>
