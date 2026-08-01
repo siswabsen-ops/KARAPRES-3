@@ -104,19 +104,18 @@ export default function App() {
   });
 
   const [accountsList, setAccountsList] = useState<{ user: User; pin: string }[]>(() => {
-    const cached = localStorage.getItem('karapres3_accounts');
+    const cached = localStorage.getItem('karapres3_accounts_v4');
     if (cached) {
       try {
         const parsed = JSON.parse(cached);
-        if (parsed.length < USER_DEMO_ACCOUNTS.length) {
-          localStorage.setItem('karapres3_accounts', JSON.stringify(USER_DEMO_ACCOUNTS));
-          return USER_DEMO_ACCOUNTS;
+        // Ensure new PINs starting with 280 exist in cached data
+        const hasNewPins = parsed.some((acc: any) => acc.pin && acc.pin.startsWith('280'));
+        if (hasNewPins && parsed.length >= USER_DEMO_ACCOUNTS.length) {
+          return parsed;
         }
-        return parsed;
-      } catch {
-        return USER_DEMO_ACCOUNTS;
-      }
+      } catch {}
     }
+    localStorage.setItem('karapres3_accounts_v4', JSON.stringify(USER_DEMO_ACCOUNTS));
     return USER_DEMO_ACCOUNTS;
   });
 
@@ -280,7 +279,7 @@ export default function App() {
   }, [activityLogs]);
 
   useEffect(() => {
-    localStorage.setItem('karapres3_accounts', JSON.stringify(accountsList));
+    localStorage.setItem('karapres3_accounts_v4', JSON.stringify(accountsList));
   }, [accountsList]);
 
   useEffect(() => {
