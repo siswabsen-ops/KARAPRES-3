@@ -17,6 +17,7 @@ import {
   UserCheck
 } from 'lucide-react';
 import { Siswa, SystemSettings, ActivityLog, User, Role, DAFTAR_KELAS } from '../types';
+import { DAFTAR_WALI_KELAS } from '../lib/demoData';
 import QRCodeRenderer from './QRCodeRenderer';
 
 interface AdminPanelProps {
@@ -34,6 +35,8 @@ interface AdminPanelProps {
   onDisconnectGoogle?: () => Promise<void>;
   onCreateNewSpreadsheet?: () => Promise<string>;
   onBackupToDrive?: () => Promise<void>;
+  onSyncFromGoogle?: () => Promise<boolean>;
+  onSyncToGoogle?: () => Promise<boolean>;
   isSyncing?: boolean;
   accountsList: { user: User; pin: string }[];
   onUpdateAccount: (userId: string, updatedUser: Partial<User>, newPin?: string) => void;
@@ -58,6 +61,8 @@ export default function AdminPanel({
   onDisconnectGoogle,
   onCreateNewSpreadsheet,
   onBackupToDrive,
+  onSyncFromGoogle,
+  onSyncToGoogle,
   isSyncing = false,
   accountsList,
   onUpdateAccount,
@@ -710,10 +715,22 @@ export default function AdminPanel({
 
                 {/* Primary Student Directory */}
                 <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-sm">
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 mb-4 border-b border-slate-100 pb-3">
                     <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">
                       📋 DIREKTORI SISWA SDN 3 ({siswaList.length} Anak)
                     </h3>
+                    {onSyncFromGoogle && (
+                      <button
+                        type="button"
+                        onClick={onSyncFromGoogle}
+                        disabled={isSyncing}
+                        className="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer shrink-0 font-sans"
+                        title="Tarik dan perbarui data siswa dari Google Spreadsheet"
+                      >
+                        <Database className="w-3.5 h-3.5" />
+                        <span>{isSyncing ? 'Menyinkronkan...' : '📥 Sync dari Spreadsheet'}</span>
+                      </button>
+                    )}
                   </div>
 
                   <div className="space-y-2.5 max-h-[460px] overflow-y-auto pr-1">
@@ -1074,14 +1091,41 @@ export default function AdminPanel({
                 </div>
 
                 <div className="p-4 bg-emerald-50/60 border border-emerald-200 rounded-2xl">
-                  <div className="flex gap-2.5 text-xs text-emerald-800 font-sans">
+                  <div className="flex gap-2.5 text-xs text-emerald-800 font-sans mb-3">
                     <FileCheck className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                     <div>
-                      <h5 className="font-bold uppercase tracking-wider text-[11px]">SINKRONISASI AKTIF & DINAMIS</h5>
+                      <h5 className="font-bold uppercase tracking-wider text-[11px]">SINKRONISASI DATABASES DUA ARAH (SINKRON SPREADSHEET)</h5>
                       <p className="text-[11px] leading-relaxed mt-0.5 font-medium text-slate-600">
-                        Pendaftaran siswa baru dan log scan presensi masuk akan otomatis tersimpan dalam Web Storage aman, dan dieksekusi sinkronisasi dwi-perangkat saat menekan tombol <b>Sync Data</b> di atas.
+                        Anda dapat menyinkronkan data siswa yang baru saja diperbarui di Google Spreadsheet ke dalam aplikasi & Cloud Database, atau mengirim data aplikasi saat ini ke Google Spreadsheet.
                       </p>
                     </div>
+                  </div>
+
+                  {/* Dual Sync Action Buttons */}
+                  <div className="flex flex-wrap gap-2.5 pt-1">
+                    {onSyncFromGoogle && (
+                      <button
+                        type="button"
+                        onClick={onSyncFromGoogle}
+                        disabled={isSyncing}
+                        className="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-xl py-2 px-4 text-xs font-bold transition-all shadow-sm flex items-center gap-2 cursor-pointer"
+                      >
+                        <Database className="w-4 h-4" />
+                        <span>📥 Tarik / Sync Data Siswa Terupdate dari Spreadsheet</span>
+                      </button>
+                    )}
+
+                    {onSyncToGoogle && (
+                      <button
+                        type="button"
+                        onClick={onSyncToGoogle}
+                        disabled={isSyncing}
+                        className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl py-2 px-4 text-xs font-bold transition-all shadow-sm flex items-center gap-2 cursor-pointer"
+                      >
+                        <FileCheck className="w-4 h-4" />
+                        <span>📤 Kirim / Backup Data App ke Google Spreadsheet</span>
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -1273,6 +1317,33 @@ export default function AdminPanel({
                         </div>
                       );
                     })}
+                  </div>
+
+                  {/* Reference List: Daftar Resmi Wali Kelas SD Negeri 3 Karamatwangi */}
+                  <div className="mt-6 bg-slate-50 border border-slate-200 p-4 rounded-2xl font-sans">
+                    <div className="flex items-center justify-between mb-3 border-b border-slate-200 pb-2">
+                      <span className="text-xs font-black tracking-wider text-slate-800 uppercase font-display flex items-center gap-1.5">
+                        🏫 DAFTAR RESMI WALI KELAS SD NEGERI 3 KARAMATWANGI
+                      </span>
+                      <span className="text-[10px] font-mono bg-emerald-100 text-emerald-800 font-extrabold px-2 py-0.5 rounded-full">
+                        12 Rombel
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                      {DAFTAR_WALI_KELAS.map((wk, idx) => (
+                        <div key={wk.kelas} className="p-2.5 bg-white border border-slate-200 rounded-xl flex items-center justify-between gap-2 shadow-2xs">
+                          <div>
+                            <span className="font-extrabold text-blue-800 text-[11px] block">{idx + 1}. {wk.kelas}</span>
+                            <span className="font-bold text-slate-800 text-xs">{wk.nama}</span>
+                          </div>
+                          <div className="text-right font-mono text-[10px] text-slate-500 shrink-0">
+                            <span className="bg-slate-100 px-1.5 py-0.5 rounded font-bold text-slate-700 block">User: {wk.username}</span>
+                            <span className="text-emerald-700 font-bold block mt-0.5">PIN: {wk.pin}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
 

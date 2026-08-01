@@ -26,13 +26,14 @@ service cloud.firestore {
     // Standalone entity validator helpers
     function isValidSiswa(data) {
       return data.keys().hasAll(['id', 'nis', 'nama', 'kelas', 'jenisKelamin', 'waOrangTua']) 
-        && data.keys().size() == 6
         && data.id is string && data.id.size() <= 128
         && data.nis is string && data.nis.size() <= 32
         && data.nama is string && data.nama.size() <= 200
         && data.kelas is string && data.kelas.size() <= 64
         && (data.jenisKelamin == 'L' || data.jenisKelamin == 'P')
-        && data.waOrangTua is string && data.waOrangTua.size() <= 30;
+        && data.waOrangTua is string && data.waOrangTua.size() <= 30
+        && (!('tempatLahir' in data) || (data.tempatLahir is string && data.tempatLahir.size() <= 100))
+        && (!('tanggalLahir' in data) || (data.tanggalLahir is string && data.tanggalLahir.size() <= 50));
     }
 
     function isValidPresensi(data) {

@@ -12,6 +12,7 @@ import {
   Award
 } from 'lucide-react';
 import { Siswa, Presensi, DAFTAR_KELAS } from '../types';
+import { getWaliKelasByKelas } from '../lib/demoData';
 
 interface KepsekPanelProps {
   siswaList: Siswa[];
@@ -286,12 +287,15 @@ export default function KepsekPanel({ siswaList, presensiList }: KepsekPanelProp
               const safePercent = Math.min(100, ratioPercent);
 
               return (
-                <div key={curKelasName} className="space-y-1">
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="font-bold text-slate-700">{curKelasName} ({totalPupils} Siswa)</span>
-                    <span className="font-mono font-black text-blue-700">{safePercent}% Hadir</span>
+                <div key={curKelasName} className="space-y-1 bg-slate-50 p-2.5 rounded-xl border border-slate-150">
+                  <div className="flex justify-between items-start text-xs">
+                    <div>
+                      <span className="font-bold text-slate-800">{curKelasName} ({totalPupils} Siswa)</span>
+                      <span className="text-[11px] text-slate-500 block font-medium">👤 {getWaliKelasByKelas(curKelasName)}</span>
+                    </div>
+                    <span className="font-mono font-black text-blue-700 shrink-0">{safePercent}% Hadir</span>
                   </div>
-                  <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden border border-slate-200">
+                  <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden border border-slate-250 mt-1">
                     <div 
                       className="bg-blue-700 h-full rounded-full transition-all duration-300" 
                       style={{ width: `${safePercent}%` }} 

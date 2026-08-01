@@ -10,7 +10,9 @@
         "nama": { "type": "string" },
         "kelas": { "type": "string" },
         "jenisKelamin": { "type": "string", "enum": ["L", "P"] },
-        "waOrangTua": { "type": "string" }
+        "waOrangTua": { "type": "string" },
+        "tempatLahir": { "type": "string" },
+        "tanggalLahir": { "type": "string" }
       },
       "required": ["id", "nis", "nama", "kelas", "jenisKelamin", "waOrangTua"]
     },

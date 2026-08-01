@@ -21,7 +21,8 @@ import {
   saveSettingsToFirestore, 
   saveActivityLogToFirestore, 
   clearActivityLogsInFirestore,
-  seedInitialDataIfDocsEmpty
+  seedInitialDataIfDocsEmpty,
+  syncAllStudentsToFirestore
 } from './lib/firebase';
 import { onSnapshot, collection, doc } from 'firebase/firestore';
 import {
@@ -29,6 +30,7 @@ import {
   logoutGoogle,
   initAuth,
   checkAndPrepareSpreadsheet,
+  fetchStudentsFromSheet,
   syncStudentsToSheet,
   syncAttendanceToSheet,
   createNewSpreadsheet,
@@ -61,8 +63,7 @@ export default function App() {
     const cached = localStorage.getItem('karapres3_siswa');
     if (cached) {
       const parsed = JSON.parse(cached);
-      // Jika masih menggunakan data demo lama (jumlah siswa <= 15), ganti otomatis dengan data rill terbaru yang di-parsing
-      if (parsed.length <= 15) {
+      if (parsed.length !== SISWA_INITIAL.length) {
         localStorage.setItem('karapres3_siswa', JSON.stringify(SISWA_INITIAL));
         return SISWA_INITIAL;
       }
@@ -103,7 +104,19 @@ export default function App() {
 
   const [accountsList, setAccountsList] = useState<{ user: User; pin: string }[]>(() => {
     const cached = localStorage.getItem('karapres3_accounts');
-    return cached ? JSON.parse(cached) : USER_DEMO_ACCOUNTS;
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached);
+        if (parsed.length < USER_DEMO_ACCOUNTS.length) {
+          localStorage.setItem('karapres3_accounts', JSON.stringify(USER_DEMO_ACCOUNTS));
+          return USER_DEMO_ACCOUNTS;
+        }
+        return parsed;
+      } catch {
+        return USER_DEMO_ACCOUNTS;
+      }
+    }
+    return USER_DEMO_ACCOUNTS;
   });
 
   // Navigation tab for overall app modules
@@ -491,13 +504,51 @@ export default function App() {
     }
   };
 
-  const handleGoogleManualSync = () => {
+  const handleGoogleManualSync = async (): Promise<boolean> => {
     if (!googleToken) {
       triggerNotice('Hubungkan Akun Google terlebih dahulu di menu Admin > Google Cloud Sync.', 'info');
       setCurrentView('manajemen');
-      return;
+      return false;
     }
-    syncAllDataToGoogle(googleToken);
+    return syncAllDataToGoogle(googleToken, false);
+  };
+
+  const handleSyncFromGoogle = async (): Promise<boolean> => {
+    if (!settings.googleSpreadsheetId) {
+      triggerNotice('Google Spreadsheet ID belum dikonfigurasi di menu Admin.', 'info');
+      setCurrentView('manajemen');
+      return false;
+    }
+
+    try {
+      setIsSyncing(true);
+      const res = await fetchStudentsFromSheet(googleToken, settings.googleSpreadsheetId);
+
+      if (!res.success || !res.students) {
+        triggerNotice(`Gagal sinkron dari Google Spreadsheet: ${res.error || 'Data tidak ditemukan'}`, 'info');
+        return false;
+      }
+
+      const updatedStudents = res.students;
+      setSiswaList(updatedStudents);
+      localStorage.setItem('karapres3_siswa', JSON.stringify(updatedStudents));
+
+      // Batch sync to Firestore cloud database
+      await syncAllStudentsToFirestore(updatedStudents);
+
+      addActivityLog(
+        'Sinkron Google Spreadsheet',
+        `Menyinkronkan ${updatedStudents.length} data siswa terupdate dari Google Spreadsheet ke database.`
+      );
+      triggerNotice(`Berhasil menyinkronkan ${updatedStudents.length} data siswa terupdate dari Google Spreadsheet!`, 'success');
+      return true;
+    } catch (err: any) {
+      console.error('Fetch students error:', err);
+      triggerNotice(`Gagal menyinkronkan data siswa: ${err.message || 'Kesalahan'}`);
+      return false;
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   // Student CRUD actions
@@ -703,6 +754,8 @@ export default function App() {
                     onDisconnectGoogle={handleDisconnectGoogle}
                     onCreateNewSpreadsheet={handleCreateNewSpreadsheet}
                     onBackupToDrive={handleBackupToDrive}
+                    onSyncFromGoogle={handleSyncFromGoogle}
+                    onSyncToGoogle={handleGoogleManualSync}
                     isSyncing={isSyncing}
                     accountsList={accountsList}
                     onUpdateAccount={handleUpdateAccount}
@@ -869,7 +922,7 @@ export default function App() {
                   <div className="bg-slate-50 p-3 rounded-2xl border border-gray-150">
                     <span className="font-black text-[10px] text-emerald-600 uppercase">🔑 GURU KELAS (WALI KELAS)</span>
                     <p className="text-gray-500 text-[11px] mt-1">
-                      Khusus memegang kontrol kelas yang diampunya (Siti Patimah memegang Kelas 4-A). Dapat mengubah status murid yang tidak hadir dari gerbang akibat ada keterangan tertulis, seperti sakit atau ijin resmi, sehingga pencatatan harian presisi.
+                      Khusus memegang kontrol kelas yang diampunya (misalnya Widia Siti Nuraeni memegang Kelas 4-A, Rima Rohmatul Hasanah memegang Kelas 1-A). Dapat mengubah status murid yang tidak hadir dari gerbang akibat ada keterangan tertulis, seperti sakit atau ijin resmi, sehingga pencatatan harian presisi.
                     </p>
                   </div>
 

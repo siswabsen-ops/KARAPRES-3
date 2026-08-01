@@ -15,6 +15,8 @@ export interface Siswa {
   kelas: string; // Kelas 1 s/d 6
   jenisKelamin: 'L' | 'P';
   waOrangTua: string; // Format Indonesia, misal: "081234567890" atau "628..."
+  tempatLahir?: string;
+  tanggalLahir?: string;
 }
 
 export const DAFTAR_KELAS = [

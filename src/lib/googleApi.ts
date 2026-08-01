@@ -129,6 +129,157 @@ export const checkAndPrepareSpreadsheet = async (
 };
 
 /**
+ * Helper to parse CSV string into 2D array
+ */
+const parseCsvToRows = (csvText: string): string[][] => {
+  const lines = csvText.split(/\r?\n/);
+  return lines
+    .map((line) => {
+      const row: string[] = [];
+      let insideQuote = false;
+      let entry = '';
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        if (char === '"') {
+          insideQuote = !insideQuote;
+        } else if (char === ',' && !insideQuote) {
+          row.push(entry.trim());
+          entry = '';
+        } else {
+          entry += char;
+        }
+      }
+      row.push(entry.trim());
+      return row.map((cell) => cell.replace(/^"(.*)"$/, '$1').trim());
+    })
+    .filter((r) => r.some((cell) => cell.length > 0));
+};
+
+/**
+ * Fallback helper to fetch public Google Spreadsheet as CSV
+ */
+const fetchSpreadsheetAsCsv = async (spreadsheetId: string, sheetName: string): Promise<string[][]> => {
+  const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error('Spreadsheet tidak dapat diakses atau ID Google Spreadsheet tidak valid.');
+  }
+  const csvText = await res.text();
+  return parseCsvToRows(csvText);
+};
+
+/**
+ * Fetch updated Students database from Google Sheets
+ */
+export const fetchStudentsFromSheet = async (
+  accessToken: string | null,
+  spreadsheetId: string
+): Promise<{ success: boolean; students?: Siswa[]; error?: string }> => {
+  if (!spreadsheetId) {
+    return { success: false, error: 'Google Spreadsheet ID belum dikonfigurasi.' };
+  }
+
+  try {
+    let rows: string[][] = [];
+
+    if (accessToken) {
+      const res = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Siswa!A1:Z2000`,
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }
+      );
+
+      if (res.ok) {
+        const data = await res.json();
+        rows = data.values || [];
+      } else {
+        // Fallback to public CSV endpoint
+        try {
+          rows = await fetchSpreadsheetAsCsv(spreadsheetId, 'Siswa');
+        } catch {
+          return {
+            success: false,
+            error: `Spreadsheet tidak dapat diakses atau ID Google Spreadsheet tidak valid. Silakan hubungkan akun Google Anda di menu Pengaturan.`
+          };
+        }
+      }
+    } else {
+      try {
+        rows = await fetchSpreadsheetAsCsv(spreadsheetId, 'Siswa');
+      } catch {
+        return {
+          success: false,
+          error: `Spreadsheet tidak dapat diakses atau ID Google Spreadsheet tidak valid. Silakan hubungkan akun Google Anda di menu Pengaturan.`
+        };
+      }
+    }
+
+    if (!rows || rows.length <= 1) {
+      return { success: false, error: 'Data lembar "Siswa" di Google Spreadsheet kosong atau belum berisi baris data.' };
+    }
+
+    const fetchedStudents: Siswa[] = [];
+    const headerRow = rows[0].map((h) => String(h).toLowerCase().trim());
+
+    // Dynamically match column indices
+    const idIdx = headerRow.findIndex((h) => h.includes('id'));
+    const nisIdx = headerRow.findIndex((h) => h.includes('nis'));
+    const namaIdx = headerRow.findIndex((h) => h.includes('nama'));
+    const kelasIdx = headerRow.findIndex((h) => h.includes('kelas'));
+    const jkIdx = headerRow.findIndex((h) => h.includes('jenis') || h.includes('kelamin') || h === 'jk');
+    const waIdx = headerRow.findIndex((h) => h.includes('wa') || h.includes('orang') || h.includes('hp') || h.includes('telepon') || h.includes('parent'));
+
+    const colId = idIdx !== -1 ? idIdx : 0;
+    const colNis = nisIdx !== -1 ? nisIdx : 1;
+    const colNama = namaIdx !== -1 ? namaIdx : 2;
+    const colKelas = kelasIdx !== -1 ? kelasIdx : 3;
+    const colJk = jkIdx !== -1 ? jkIdx : 4;
+    const colWa = waIdx !== -1 ? waIdx : 5;
+
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i];
+      if (!row || row.length === 0) continue;
+
+      const rawNama = row[colNama] ? String(row[colNama]).trim() : '';
+      const rawNis = row[colNis] ? String(row[colNis]).trim() : '';
+      if (!rawNama && !rawNis) continue;
+
+      const id = row[colId] && String(row[colId]).trim() ? String(row[colId]).trim() : `sis-${Date.now()}-${i}`;
+      const nis = rawNis || `100${i}`;
+      const nama = rawNama || `Siswa ${i}`;
+      const kelas = row[colKelas] ? String(row[colKelas]).trim() : 'Kelas 1-A';
+
+      const jkRaw = row[colJk] ? String(row[colJk]).trim().toUpperCase() : 'L';
+      const jenisKelamin: 'L' | 'P' = jkRaw.startsWith('P') || jkRaw === 'PEREMPUAN' || jkRaw === 'FEMALE' ? 'P' : 'L';
+
+      let waOrangTua = row[colWa] ? String(row[colWa]).trim() : '081234567890';
+      if (waOrangTua.startsWith('62')) {
+        waOrangTua = '0' + waOrangTua.slice(2);
+      }
+
+      fetchedStudents.push({
+        id,
+        nis,
+        nama,
+        kelas,
+        jenisKelamin,
+        waOrangTua,
+      });
+    }
+
+    if (fetchedStudents.length === 0) {
+      return { success: false, error: 'Tidak ditemukan data siswa yang valid di lembar "Siswa".' };
+    }
+
+    return { success: true, students: fetchedStudents };
+  } catch (err: any) {
+    console.error('Error fetching students from sheet:', err);
+    return { success: false, error: err.message || 'Gagal membaca data dari Google Spreadsheet.' };
+  }
+};
+
+/**
  * Sync Students data to Google Sheets
  */
 export const syncStudentsToSheet = async (

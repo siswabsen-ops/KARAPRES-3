@@ -88,11 +88,43 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
 // CRUD DATABASE HELPERS
 // ==========================================
 
+// Clean payload helpers to prevent undefined fields in Firestore
+const cleanSiswaForFirestore = (s: Siswa) => {
+  const payload: Record<string, any> = {
+    id: s.id,
+    nis: s.nis,
+    nama: s.nama,
+    kelas: s.kelas,
+    jenisKelamin: s.jenisKelamin,
+    waOrangTua: s.waOrangTua,
+  };
+  if (s.tempatLahir) payload.tempatLahir = s.tempatLahir;
+  if (s.tanggalLahir) payload.tanggalLahir = s.tanggalLahir;
+  return payload;
+};
+
+const cleanPresensiForFirestore = (p: Presensi) => {
+  const payload: Record<string, any> = {
+    id: p.id,
+    siswaId: p.siswaId,
+    nis: p.nis,
+    nama: p.nama,
+    kelas: p.kelas,
+    tanggal: p.tanggal,
+    waktu: p.waktu,
+    status: p.status,
+    waStatus: p.waStatus,
+    operator: p.operator,
+  };
+  if (p.pesanTerkirim) payload.pesanTerkirim = p.pesanTerkirim;
+  return payload;
+};
+
 // Siswa CRUD
 export const saveSiswaToFirestore = async (siswa: Siswa) => {
   const path = `siswa/${siswa.id}`;
   try {
-    await setDoc(doc(db, 'siswa', siswa.id), siswa);
+    await setDoc(doc(db, 'siswa', siswa.id), cleanSiswaForFirestore(siswa));
   } catch (err) {
     handleFirestoreError(err, OperationType.WRITE, path);
   }
@@ -111,7 +143,7 @@ export const deleteSiswaFromFirestore = async (siswaId: string) => {
 export const savePresensiToFirestore = async (presensi: Presensi) => {
   const path = `presensi/${presensi.id}`;
   try {
-    await setDoc(doc(db, 'presensi', presensi.id), presensi);
+    await setDoc(doc(db, 'presensi', presensi.id), cleanPresensiForFirestore(presensi));
   } catch (err) {
     handleFirestoreError(err, OperationType.WRITE, path);
   }
@@ -197,6 +229,24 @@ export const clearActivityLogsInFirestore = async (logs: ActivityLog[]) => {
   }
 };
 
+// Batch Sync all students to Firestore database
+export const syncAllStudentsToFirestore = async (students: Siswa[]) => {
+  try {
+    const chunkSize = 200;
+    for (let i = 0; i < students.length; i += chunkSize) {
+      const chunk = students.slice(i, i + chunkSize);
+      const batch = writeBatch(db);
+      chunk.forEach((s) => {
+        batch.set(doc(db, 'siswa', s.id), cleanSiswaForFirestore(s));
+      });
+      await batch.commit();
+    }
+    console.log(`Successfully synced ${students.length} students to Firestore.`);
+  } catch (err) {
+    handleFirestoreError(err, OperationType.WRITE, 'siswa/*');
+  }
+};
+
 // ==========================================
 // MASS DATABASE SEEDING UTILITIES
 // ==========================================
@@ -210,7 +260,7 @@ export const seedInitialDataIfDocsEmpty = async (
   try {
     // 1. Check Siswa
     const siswaSnap = await getDocs(collection(db, 'siswa'));
-    if (siswaSnap.empty) {
+    if (siswaSnap.empty || siswaSnap.size < siswaSource.length) {
       console.log(`Seeding ${siswaSource.length} students into Cloud Firestore...`);
       // Since there can be up to 400 students, we chunk writeBatch to 200 items max (Firestore writeBatch limit is 500)
       const chunkSize = 200;
@@ -218,7 +268,7 @@ export const seedInitialDataIfDocsEmpty = async (
         const chunk = siswaSource.slice(i, i + chunkSize);
         const batch = writeBatch(db);
         chunk.forEach((s) => {
-          batch.set(doc(db, 'siswa', s.id), s);
+          batch.set(doc(db, 'siswa', s.id), cleanSiswaForFirestore(s));
         });
         await batch.commit();
       }

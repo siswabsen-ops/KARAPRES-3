@@ -1,6 +1,30 @@
 import { Siswa, User, SystemSettings, Presensi, ActivityLog } from '../types';
 import realStudents from './realStudents.json';
 
+export const DAFTAR_WALI_KELAS = [
+  { kelas: 'Kelas 1-A', nama: 'Rima Rohmatul Hasanah, S.Pd.', username: 'guru1a', pin: '3301' },
+  { kelas: 'Kelas 1-B', nama: 'Apriyanti Sri Habibah, S.Pd.Gr.', username: 'guru1b', pin: '3302' },
+  { kelas: 'Kelas 2-A', nama: 'Linda Safitri Indriyani, S.Pd.Gr.', username: 'guru2a', pin: '3303' },
+  { kelas: 'Kelas 2-B', nama: 'Rena Siti Napisah, S.Pd.Gr.', username: 'guru2b', pin: '3304' },
+  { kelas: 'Kelas 3-A', nama: 'Ayu Latifah Somantri, S.Pd.Gr.', username: 'guru3a', pin: '3305' },
+  { kelas: 'Kelas 3-B', nama: 'Ai Nursyifa, S.Pd.,MCE.', username: 'guru3b', pin: '3306' },
+  { kelas: 'Kelas 4-A', nama: 'Widia Siti Nuraeni, S.Pd.Gr.', username: 'guru4a', pin: '3333' },
+  { kelas: 'Kelas 4-B', nama: 'Mita Nurhasni Faujiah, S.Pd.,MCE.', username: 'guru4b', pin: '3308' },
+  { kelas: 'Kelas 5-A', nama: 'Tanti Maryam Kurnianti, S.Pd.Gr.', username: 'guru5a', pin: '3309' },
+  { kelas: 'Kelas 5-B', nama: 'Tedi Rismadiansah, S.Pd.Gr.', username: 'guru5b', pin: '3310' },
+  { kelas: 'Kelas 6-A', nama: 'Taufik Firdaus, S.Pd.Gr.', username: 'guru6a', pin: '3311' },
+  { kelas: 'Kelas 6-B', nama: 'Usman Fauzan Alan, S.Pd.Gr.', username: 'guru6b', pin: '3312' }
+];
+
+export const getWaliKelasByKelas = (kelasName: string): string => {
+  const item = DAFTAR_WALI_KELAS.find(
+    (w) =>
+      w.kelas.toLowerCase() === kelasName.toLowerCase() ||
+      w.kelas.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() === kelasName.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()
+  );
+  return item ? item.nama : 'Guru Kelas';
+};
+
 export const USER_DEMO_ACCOUNTS: { user: User; pin: string }[] = [
   {
     user: {
@@ -20,16 +44,16 @@ export const USER_DEMO_ACCOUNTS: { user: User; pin: string }[] = [
     },
     pin: '2222'
   },
-  {
+  ...DAFTAR_WALI_KELAS.map((g) => ({
     user: {
-      id: 'usr-guru4',
-      username: 'guru4',
-      namaLengkap: 'Siti Patimah, S.Pd.',
-      role: 'guru',
-      kelasSpesifik: 'Kelas 4-A'
+      id: `usr-guru-${g.username}`,
+      username: g.username,
+      namaLengkap: g.nama,
+      role: 'guru' as const,
+      kelasSpesifik: g.kelas
     },
-    pin: '3333'
-  },
+    pin: g.pin
+  })),
   {
     user: {
       id: 'usr-piket',
@@ -58,7 +82,9 @@ export const SISWA_INITIAL: Siswa[] = (realStudents as any[]).map((s) => {
     nama: s.nama,
     kelas: mappedKelas,
     jenisKelamin: s.jenisKelamin,
-    waOrangTua: s.waOrangTua
+    waOrangTua: s.waOrangTua,
+    tempatLahir: s.tempatLahir,
+    tanggalLahir: s.tanggalLahir
   };
 });
 

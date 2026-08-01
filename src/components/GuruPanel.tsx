@@ -207,7 +207,7 @@ export default function GuruPanel({
                     )}
                   </div>
 
-                  {/* Operational status switches (Set manual by Siti Patimah) */}
+                  {/* Operational status switches (Set manual oleh Wali Kelas) */}
                   <div className="flex flex-wrap items-center gap-1 self-stretch sm:self-auto justify-end">
                     {(['Hadir', 'Sakit', 'Izin', 'Alfa', 'Terlambat'] as StatusKehadiran[]).map((st) => (
                       <button
