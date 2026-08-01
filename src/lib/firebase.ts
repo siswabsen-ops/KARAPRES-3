@@ -286,8 +286,19 @@ export const seedInitialDataIfDocsEmpty = async (
 
     // 2. Check Accounts
     const accountsSnap = await getDocs(collection(db, 'accounts'));
-    if (accountsSnap.empty) {
-      console.log(`Seeding demo accounts into Cloud Firestore...`);
+    let needsAccountsSeed = accountsSnap.empty;
+    if (!needsAccountsSeed) {
+      accountsSnap.forEach((docSnap) => {
+        const data = docSnap.data();
+        const matchingSource = accountsSource.find((a) => a.user.id === data.id || a.user.username === data.username);
+        if (matchingSource && matchingSource.pin !== data.pin) {
+          needsAccountsSeed = true;
+        }
+      });
+    }
+
+    if (needsAccountsSeed) {
+      console.log(`Seeding/Updating demo accounts into Cloud Firestore...`);
       const batch = writeBatch(db);
       accountsSource.forEach((acc) => {
         batch.set(doc(db, 'accounts', acc.user.id), {
@@ -300,7 +311,7 @@ export const seedInitialDataIfDocsEmpty = async (
         });
       });
       await batch.commit();
-      console.log('Seeded Accounts to cloud.');
+      console.log('Seeded/Updated Accounts to cloud.');
     }
 
     // 3. Check Settings

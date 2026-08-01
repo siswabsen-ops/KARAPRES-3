@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Shield, Key, Eye, EyeOff, Check, AlertCircle, Info, Lock } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { User } from '../types';
+import { USER_DEMO_ACCOUNTS } from '../lib/demoData';
 
 const schoolLogo = '/src/assets/images/mascot_digiwangi_yellow_chick_1781079002921.png';
 
@@ -62,19 +63,30 @@ export default function LoginScreen({ onLoginSuccess, accountsList }: LoginScree
     e.preventDefault();
     setErrorMsg('');
 
-    if (!username.trim() || !pin.trim()) {
+    const cleanUsername = username.trim().toLowerCase();
+    const cleanPin = pin.trim();
+
+    if (!cleanUsername || !cleanPin) {
       setErrorMsg('Username dan PIN wajib diisi.');
       return;
     }
 
-    const matched = accountsList.find(
-      (acc) => acc.user.username.toLowerCase() === username.trim().toLowerCase() && acc.pin === pin.trim()
+    // Combine accountsList and fallback USER_DEMO_ACCOUNTS
+    const allAccounts = [...accountsList];
+    USER_DEMO_ACCOUNTS.forEach((demoAcc) => {
+      if (!allAccounts.some((a) => a.user.username.toLowerCase() === demoAcc.user.username.toLowerCase())) {
+        allAccounts.push(demoAcc);
+      }
+    });
+
+    const matched = allAccounts.find(
+      (acc) => acc.user.username.toLowerCase() === cleanUsername && acc.pin === cleanPin
     );
 
     if (matched) {
       onLoginSuccess(matched.user);
     } else {
-      setErrorMsg('Kombinasi Username dan PIN salah. Silakan coba lagi.');
+      setErrorMsg('Kombinasi Username dan PIN salah. Silakan periksa username & PIN Anda.');
     }
   };
 
@@ -262,7 +274,7 @@ export default function LoginScreen({ onLoginSuccess, accountsList }: LoginScree
             <span className="text-[10px] font-black tracking-wider text-blue-700 block mb-2.5 uppercase font-display">
               🚀 AKSES CEPAT (AKUN DEMO SEJAHTERA)
             </span>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto pr-1">
               {accountsList.map((acc) => {
                 const getRoleColor = (role: string) => {
                   switch (role) {
@@ -297,7 +309,10 @@ export default function LoginScreen({ onLoginSuccess, accountsList }: LoginScree
                       {getRoleLabels(acc.user)}
                     </span>
                     <span className="font-extrabold text-xs truncate w-full tracking-tight">{acc.user.namaLengkap}</span>
-                    <span className="text-[10px] opacity-90 mt-0.5 font-mono">PIN: {acc.pin}</span>
+                    <div className="flex items-center justify-between w-full text-[9px] opacity-90 mt-1 font-mono border-t border-white/20 pt-1">
+                      <span>User: <strong>{acc.user.username}</strong></span>
+                      <span>PIN: <strong>{acc.pin}</strong></span>
+                    </div>
                   </button>
                 );
               })}
