@@ -19,6 +19,7 @@ import {
 import { Siswa, SystemSettings, ActivityLog, User, Role, DAFTAR_KELAS } from '../types';
 import { DAFTAR_WALI_KELAS, getWaliKelasByKelas } from '../lib/demoData';
 import QRCodeRenderer from './QRCodeRenderer';
+import BatchQRPrintModal from './BatchQRPrintModal';
 
 interface AdminPanelProps {
   siswaList: Siswa[];
@@ -93,6 +94,15 @@ export default function AdminPanel({
 
   // Card view layout switcher for individual pupils printing helper
   const [selectedPrintSiswa, setSelectedPrintSiswa] = useState<Siswa | null>(null);
+
+  // Batch QR Print Modal State
+  const [isBatchPrintModalOpen, setIsBatchPrintModalOpen] = useState(false);
+  const [batchPrintDefaultKelas, setBatchPrintDefaultKelas] = useState('Semua Kelas');
+
+  const handleOpenBatchPrint = (targetKelas = 'Semua Kelas') => {
+    setBatchPrintDefaultKelas(targetKelas);
+    setIsBatchPrintModalOpen(true);
+  };
 
   // Local states for Admin / Operator Account Forms
   const [editingAccountId, setEditingAccountId] = useState<string | null>(null);
@@ -719,18 +729,31 @@ export default function AdminPanel({
                     <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">
                       📋 DIREKTORI SISWA SDN 3 ({siswaList.length} Anak)
                     </h3>
-                    {onSyncFromGoogle && (
+                    <div className="flex flex-wrap items-center gap-2">
                       <button
                         type="button"
-                        onClick={onSyncFromGoogle}
-                        disabled={isSyncing}
-                        className="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer shrink-0 font-sans"
-                        title="Tarik dan perbarui data siswa dari Google Spreadsheet"
+                        id="btn-open-batch-print-qr"
+                        onClick={() => handleOpenBatchPrint('Semua Kelas')}
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer shrink-0 font-sans"
+                        title="Cetak kartu QR Code untuk semua siswa atau per kelas"
                       >
-                        <Database className="w-3.5 h-3.5" />
-                        <span>{isSyncing ? 'Menyinkronkan...' : '📥 Sync dari Spreadsheet'}</span>
+                        <Printer className="w-3.5 h-3.5 text-amber-300" />
+                        <span>🖨️ Cetak QR Massal (Per Kelas)</span>
                       </button>
-                    )}
+
+                      {onSyncFromGoogle && (
+                        <button
+                          type="button"
+                          onClick={onSyncFromGoogle}
+                          disabled={isSyncing}
+                          className="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer shrink-0 font-sans"
+                          title="Tarik dan perbarui data siswa dari Google Spreadsheet"
+                        >
+                          <Database className="w-3.5 h-3.5" />
+                          <span>{isSyncing ? 'Menyinkronkan...' : '📥 Sync dari Spreadsheet'}</span>
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   <div className="space-y-2.5 max-h-[460px] overflow-y-auto pr-1">
@@ -840,8 +863,18 @@ export default function AdminPanel({
                         </div>
                       </div>
 
-                      <div className="border-t border-gray-200 mt-3 pt-2 text-[10px] text-gray-400 font-mono">
-                        SDN 3 KARAMATWANGI
+                      <div className="border-t border-gray-200 mt-3 pt-2 flex items-center justify-between text-[10px] text-gray-500 font-sans">
+                        <span className="font-mono">SDN 3 KARAMATWANGI</span>
+                        <button
+                          type="button"
+                          onClick={() => handleOpenBatchPrint(targetKelas)}
+                          disabled={countSiswa === 0}
+                          className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold px-2.5 py-1 rounded-lg border border-indigo-200 flex items-center gap-1 transition-colors cursor-pointer disabled:opacity-40"
+                          title={`Cetak QR Code semua murid ${targetKelas}`}
+                        >
+                          <Printer className="w-3 h-3 text-indigo-600" />
+                          <span>Cetak QR ({countSiswa})</span>
+                        </button>
                       </div>
                     </div>
                   );
@@ -1511,6 +1544,13 @@ export default function AdminPanel({
           </div>
         </div>
       )}
+      {/* Modal Batch Print QR Code */}
+      <BatchQRPrintModal
+        isOpen={isBatchPrintModalOpen}
+        onClose={() => setIsBatchPrintModalOpen(false)}
+        siswaList={siswaList}
+        defaultKelas={batchPrintDefaultKelas}
+      />
     </div>
   );
 }
