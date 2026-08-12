@@ -2,7 +2,7 @@ import { Database, Flame, Wifi, RefreshCw } from 'lucide-react';
 import { motion } from 'motion/react';
 import { User } from '../types';
 
-const schoolLogo = '/src/assets/images/mascot_digiwangi_yellow_chick_1781079002921.png';
+const schoolLogo = '/mascot.png';
 
 interface HeaderProps {
   currentUser: User | null;

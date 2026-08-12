@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Sparkles, MessageSquare, ChevronRight, ChevronLeft, Volume2, X, HelpCircle, GraduationCap } from 'lucide-react';
 
-const schoolLogo = '/src/assets/images/mascot_digiwangi_yellow_chick_1781079002921.png';
+const schoolLogo = '/mascot.png';
 
 export default function MascotPromoAssistant() {
   const [isOpen, setIsOpen] = useState(false);

@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { User } from '../types';
 import { USER_DEMO_ACCOUNTS } from '../lib/demoData';
 
-const schoolLogo = '/src/assets/images/mascot_digiwangi_yellow_chick_1781079002921.png';
+const schoolLogo = '/mascot.png';
 
 interface LoginScreenProps {
   onLoginSuccess: (user: User) => void;
