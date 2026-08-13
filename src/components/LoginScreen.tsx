@@ -4,7 +4,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import { User } from '../types';
 import { USER_DEMO_ACCOUNTS } from '../lib/demoData';
 
-const schoolLogo = '/mascot.png';
+const digiwangiLogo = '/logo.png';
+const digiwangiMascot = '/mascot.png';
 
 interface LoginScreenProps {
   onLoginSuccess: (user: User) => void;
@@ -113,8 +114,13 @@ export default function LoginScreen({ onLoginSuccess, accountsList }: LoginScree
 
           <div className="relative z-10">
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center backdrop-blur-md border border-white/20 shadow-inner shrink-0">
-                <Shield className="w-5 h-5 text-blue-100" />
+              <div className="w-12 h-12 bg-[#070e1e] rounded-xl flex items-center justify-center shadow-md border border-blue-400/30 shrink-0 overflow-hidden">
+                <img 
+                  src={digiwangiLogo} 
+                  alt="Logo DIGIWANGI 3" 
+                  referrerPolicy="no-referrer"
+                  className="w-full h-full object-contain"
+                />
               </div>
               <div>
                 <h2 className="text-2xl font-black tracking-tighter leading-none font-display flex items-center gap-[0.5px]">
@@ -183,7 +189,7 @@ export default function LoginScreen({ onLoginSuccess, accountsList }: LoginScree
               title="Klik aku untuk melihat keunggulan!"
             >
               <img 
-                src={schoolLogo} 
+                src={digiwangiMascot} 
                 alt="Mascot DigiWangi 3" 
                 referrerPolicy="no-referrer"
                 className="w-full h-full object-contain"

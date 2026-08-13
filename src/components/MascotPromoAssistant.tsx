@@ -8,7 +8,7 @@ export default function MascotPromoAssistant() {
   const [isOpen, setIsOpen] = useState(false);
   const [activeSlide, setActiveSlide] = useState(0);
   const [showBubble, setShowBubble] = useState(true);
-  const [bubbleText, setBubbleText] = useState('Pagi! Aku Digi-Wangi - Maskot Pintar SDN 3 Karamatwangi 🐣');
+  const [bubbleText, setBubbleText] = useState('Pagi! Aku Digi-Wangi - Maskot Pintar SDN 3 Karamatwangi 🤖⚡');
 
   // Interactive Chiptune Audio Synthesizer (No MP3 dependencies - completely built with Web Audio API)
   const playChiptune = (type: 'chime' | 'jump' | 'sparkle') => {

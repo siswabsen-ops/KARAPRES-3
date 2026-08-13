@@ -2,7 +2,7 @@ import { Database, Flame, Wifi, RefreshCw } from 'lucide-react';
 import { motion } from 'motion/react';
 import { User } from '../types';
 
-const schoolLogo = '/mascot.png';
+const digiwangiLogo = '/logo.png';
 
 interface HeaderProps {
   currentUser: User | null;
@@ -28,14 +28,14 @@ export default function Header({
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col md:flex-row items-center justify-between gap-4">
         {/* Logo & School Title */}
-        <div className="flex items-center gap-4 select-none self-start md:self-auto">
-          {/* Circular Shield Logo block with playful hover scaling */}
-          <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center p-0.5 shadow-md border border-blue-100 shrink-0 overflow-hidden transform hover:scale-110 hover:rotate-6 transition-all duration-300 cursor-pointer">
+        <div className="flex items-center gap-3.5 select-none self-start md:self-auto">
+          {/* Logo DIGIWANGI 3 (Official Metallic Emblem) */}
+          <div className="w-12 h-12 bg-[#070e1e] rounded-xl flex items-center justify-center shadow-md border border-blue-400/30 shrink-0 overflow-hidden transform hover:scale-105 transition-all duration-300 cursor-pointer" title="Logo Resmi DIGIWANGI 3">
             <img 
-              src={schoolLogo} 
+              src={digiwangiLogo} 
               alt="Logo DIGIWANGI 3" 
               referrerPolicy="no-referrer"
-              className="w-full h-full object-contain rounded-full"
+              className="w-full h-full object-contain"
             />
           </div>
 
