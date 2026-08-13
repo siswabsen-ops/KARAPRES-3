@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Sparkles, MessageSquare, ChevronRight, ChevronLeft, Volume2, X, HelpCircle, GraduationCap } from 'lucide-react';
 
-const schoolLogo = '/mascot.png';
+import digiwangiMascot from '../assets/images/mascot_digiwangi_1780544448389.png';
+import { DIGIWANGI_MASCOT_BASE64 } from '../assets/mascotBase64';
 
 export default function MascotPromoAssistant() {
   const [isOpen, setIsOpen] = useState(false);
@@ -213,9 +214,12 @@ export default function MascotPromoAssistant() {
             title="Klik aku untuk asisten & promo!"
           >
             <img 
-              src={schoolLogo} 
+              src={DIGIWANGI_MASCOT_BASE64} 
               alt="Mascot Digi-Wangi" 
               referrerPolicy="no-referrer"
+              loading="eager"
+              decoding="sync"
+              onError={(e) => { (e.currentTarget as HTMLImageElement).src = digiwangiMascot; }}
               className="w-full h-full object-contain rounded-full"
             />
             

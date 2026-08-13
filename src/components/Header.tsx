@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { User } from '../types';
 
 import digiwangiLogo from '../assets/images/logo_digiwangi3_official.png';
+import { DIGIWANGI_LOGO_BASE64 } from '../assets/logoBase64';
 
 interface HeaderProps {
   currentUser: User | null;
@@ -32,9 +33,12 @@ export default function Header({
           {/* Logo DIGIWANGI 3 (Official Emblem) */}
           <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center p-1 shadow-md border border-blue-200 shrink-0 overflow-hidden transform hover:scale-105 transition-all duration-300 cursor-pointer" title="Logo Resmi DIGIWANGI 3">
             <img 
-              src={digiwangiLogo} 
+              src={DIGIWANGI_LOGO_BASE64} 
               alt="Logo DIGIWANGI 3" 
               referrerPolicy="no-referrer"
+              loading="eager"
+              decoding="sync"
+              onError={(e) => { (e.currentTarget as HTMLImageElement).src = digiwangiLogo; }}
               className="w-full h-full object-contain"
             />
           </div>

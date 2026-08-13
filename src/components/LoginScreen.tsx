@@ -6,6 +6,8 @@ import { USER_DEMO_ACCOUNTS } from '../lib/demoData';
 
 import digiwangiLogo from '../assets/images/logo_digiwangi3_official.png';
 import digiwangiMascot from '../assets/images/mascot_digiwangi_1780544448389.png';
+import { DIGIWANGI_LOGO_BASE64 } from '../assets/logoBase64';
+import { DIGIWANGI_MASCOT_BASE64 } from '../assets/mascotBase64';
 
 interface LoginScreenProps {
   onLoginSuccess: (user: User) => void;
@@ -116,9 +118,12 @@ export default function LoginScreen({ onLoginSuccess, accountsList }: LoginScree
             <div className="flex items-center gap-3 mb-2">
               <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center p-1 shadow-md border border-white/30 shrink-0 overflow-hidden">
                 <img 
-                  src={digiwangiLogo} 
+                  src={DIGIWANGI_LOGO_BASE64} 
                   alt="Logo DIGIWANGI 3" 
                   referrerPolicy="no-referrer"
+                  loading="eager"
+                  decoding="sync"
+                  onError={(e) => { (e.currentTarget as HTMLImageElement).src = digiwangiLogo; }}
                   className="w-full h-full object-contain"
                 />
               </div>
@@ -189,9 +194,12 @@ export default function LoginScreen({ onLoginSuccess, accountsList }: LoginScree
               title="Klik aku untuk melihat keunggulan!"
             >
               <img 
-                src={digiwangiMascot} 
+                src={DIGIWANGI_MASCOT_BASE64} 
                 alt="Mascot DigiWangi 3" 
                 referrerPolicy="no-referrer"
+                loading="eager"
+                decoding="sync"
+                onError={(e) => { (e.currentTarget as HTMLImageElement).src = digiwangiMascot; }}
                 className="w-full h-full object-contain"
               />
               
