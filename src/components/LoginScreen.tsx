@@ -4,8 +4,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import { User } from '../types';
 import { USER_DEMO_ACCOUNTS } from '../lib/demoData';
 
-const digiwangiLogo = '/logo.png';
-const digiwangiMascot = '/mascot.png';
+import digiwangiLogo from '../assets/images/logo_digiwangi3_official.png';
+import digiwangiMascot from '../assets/images/mascot_digiwangi_1780544448389.png';
 
 interface LoginScreenProps {
   onLoginSuccess: (user: User) => void;
@@ -114,7 +114,7 @@ export default function LoginScreen({ onLoginSuccess, accountsList }: LoginScree
 
           <div className="relative z-10">
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-12 h-12 bg-[#070e1e] rounded-xl flex items-center justify-center shadow-md border border-blue-400/30 shrink-0 overflow-hidden">
+              <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center p-1 shadow-md border border-white/30 shrink-0 overflow-hidden">
                 <img 
                   src={digiwangiLogo} 
                   alt="Logo DIGIWANGI 3" 
