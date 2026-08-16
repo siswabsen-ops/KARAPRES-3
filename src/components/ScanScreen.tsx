@@ -235,12 +235,12 @@ export default function ScanScreen({
       // Browser blocks audio until interaction, ignore
     }
 
-    // Auto clear scanned view and resume scanning automatically after 1.5 seconds
+    // Auto clear scanned HUD banner and resume scanning automatically after 0.8 seconds (Fast Mass Attendance)
     scanTimeoutRef.current = setTimeout(() => {
       setScannerStatus('SCANNING');
       setScannedResult(null);
       setErrorMsg('');
-    }, 1500);
+    }, 1200);
   };
 
   const handleNisSubmit = (e: React.FormEvent) => {
@@ -267,12 +267,18 @@ export default function ScanScreen({
           {/* Banner */}
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-lg font-black text-slate-800 tracking-tight flex items-center gap-2 font-display">
-                <Camera className="w-5 h-5 text-blue-700 animate-pulse" />
-                Pindai QR Code Kartu Siswa
-              </h3>
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg font-black text-slate-800 tracking-tight flex items-center gap-2 font-display">
+                  <Camera className="w-5 h-5 text-blue-700 animate-pulse" />
+                  Pindai QR Code Kartu Siswa
+                </h3>
+                <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 px-2 py-0.5 rounded-full flex items-center gap-1 font-mono">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+                  Antrean Kelas Cepat
+                </span>
+              </div>
               <p className="text-xs text-slate-500">
-                Posisikan QR Code kartu siswa di depan kamera HP / Laptop secara lurus.
+                Arahkan QR Code kartu siswa ke kamera. Sistem membaca beruntun tanpa jeda pop-up.
               </p>
             </div>
             
@@ -287,7 +293,9 @@ export default function ScanScreen({
           </div>
 
           {/* Real-time Camera Feed Simulator / Real Webcam View Port */}
-          <div className="relative aspect-video bg-slate-950 rounded-2xl overflow-hidden shadow-inner border border-slate-800 flex flex-col justify-center items-center">
+          <div className={`relative aspect-video bg-slate-950 rounded-2xl overflow-hidden shadow-inner border transition-all duration-300 flex flex-col justify-center items-center ${
+            scannerStatus === 'SUCCESS' ? 'border-emerald-500 ring-4 ring-emerald-500/30' : 'border-slate-800'
+          }`}>
             {useCamera ? (
               <>
                 <video
@@ -305,7 +313,9 @@ export default function ScanScreen({
                 
                 {/* Green corner targeting overlay frame */}
                 <div className="absolute inset-0 p-8 pointer-events-none flex items-center justify-center">
-                  <div className="w-48 h-28 border-2 border-emerald-450 border-dashed rounded-lg opacity-75 relative">
+                  <div className={`w-48 h-28 border-2 border-dashed rounded-lg opacity-85 relative transition-colors ${
+                    scannerStatus === 'SUCCESS' ? 'border-emerald-400' : 'border-emerald-500/70'
+                  }`}>
                     <span className="absolute -top-1.5 -left-1.5 w-4 h-4 border-t-4 border-l-4 border-emerald-500 block" />
                     <span className="absolute -top-1.5 -right-1.5 w-4 h-4 border-t-4 border-r-4 border-emerald-500 block" />
                     <span className="absolute -bottom-1.5 -left-1.5 w-4 h-4 border-b-4 border-l-4 border-emerald-500 block" />
@@ -314,7 +324,7 @@ export default function ScanScreen({
                 </div>
 
                 {/* Subtitle Status */}
-                <div className="absolute bottom-3 left-3 bg-slate-950/80 backdrop-blur-md px-3 py-1.5 rounded-full text-[10px] font-black text-white flex items-center gap-1.5">
+                <div className="absolute top-3 left-3 bg-slate-950/80 backdrop-blur-md px-3 py-1.5 rounded-full text-[10px] font-black text-white flex items-center gap-1.5 z-20">
                   <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-ping" />
                   KAMERA AKTIF ({currentUser.role === 'piket' ? 'PETUGAS PIKET' : 'OPERATOR'})
                 </div>
@@ -344,77 +354,60 @@ export default function ScanScreen({
 
             {/* Error Message Notice Bar overlay */}
             {errorMsg && (
-              <div className="absolute top-3 inset-x-3 bg-red-900/95 backdrop-blur-md border border-red-700 text-white p-2.5 rounded-xl text-[11px] text-center flex items-center justify-center gap-1.5 shadow-lg select-none">
+              <div className="absolute top-3 inset-x-3 bg-red-900/95 backdrop-blur-md border border-red-700 text-white p-2.5 rounded-xl text-[11px] text-center flex items-center justify-center gap-1.5 shadow-lg select-none z-30">
                 <AlertTriangle className="w-4 h-4 text-white shrink-0" />
                 {errorMsg}
               </div>
             )}
             
-            {/* SUCCESS SCAN SCREEN PORT */}
+            {/* SUCCESS SCAN SCREEN: NON-BLOCKING BOTTOM HUD BANNER (Camera stays 100% visible & active) */}
             {scannerStatus === 'SUCCESS' && scannedResult && (
-              <div className="absolute inset-0 bg-[#075E54]/95 backdrop-blur-md text-white p-8 flex flex-col justify-center items-center text-center animate-in zoom-in-95 duration-150">
-                <div className="w-20 h-20 bg-emerald-500 rounded-full flex items-center justify-center text-white scale-110 mb-4 shadow-lg border-4 border-white animate-bounce">
-                  <UserCheck className="w-10 h-10" />
-                </div>
-                <span className="bg-[#128C7E] border border-emerald-400 text-emerald-100 font-bold px-3 py-1 rounded-full text-xs uppercase tracking-widest leading-none mb-2">
-                  NOTIFIKASI WHATSAPP DIKIRIM
-                </span>
-                <h4 className="text-xl font-black">{scannedResult.nama}</h4>
-                <p className="text-xs text-emerald-150 opacity-95">NIS: {scannedResult.nis} • {scannedResult.kelas}</p>
-                
-                {/* Visual Status Result Block */}
-                <div className="flex items-center gap-4 mt-6">
-                  <div className="bg-white/10 px-3.5 py-1.5 rounded-2xl flex flex-col items-center">
-                    <span className="text-[9px] uppercase tracking-wider text-emerald-200">Waktu Scan</span>
-                    <span className="text-lg font-black">{scannedResult.waktu} WIB</span>
+              <div className="absolute inset-x-3 bottom-3 bg-slate-950/90 backdrop-blur-md border-2 border-emerald-500 text-white p-3 rounded-2xl shadow-2xl flex items-center justify-between gap-3 animate-in slide-in-from-bottom-4 duration-150 z-30 pointer-events-auto">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-11 h-11 bg-emerald-600 rounded-xl flex items-center justify-center text-white shrink-0 shadow-lg border border-emerald-400">
+                    <UserCheck className="w-6 h-6 animate-bounce" />
                   </div>
-                  <div className={`px-4 py-2 rounded-2xl flex flex-col items-center text-white font-bold shadow-md ${
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[9px] font-black uppercase tracking-wider bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-md font-mono">
+                        PRESENSI BERHASIL
+                      </span>
+                      <span className="text-[10px] text-slate-400 font-mono">{scannedResult.waktu} WIB</span>
+                    </div>
+                    <h4 className="text-sm font-black text-white truncate mt-0.5">{scannedResult.nama}</h4>
+                    <div className="flex items-center gap-2 text-[10px] text-slate-300">
+                      <span className="font-mono font-bold text-slate-200">NIS: {scannedResult.nis} ({scannedResult.kelas})</span>
+                      <span className="text-emerald-400 font-medium truncate">
+                        • 📡 WA: {scannedResult.pesanTerkirim?.match(/\(([^)]+)\)/)?.[1] || '087844651559 (Terkirim)'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className={`px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wide shadow-md ${
                     scannedResult.status === 'Hadir' 
-                      ? 'bg-emerald-600 border border-emerald-400' 
-                      : 'bg-amber-600 border border-amber-400'
+                      ? 'bg-emerald-600 text-white border border-emerald-400' 
+                      : 'bg-amber-600 text-white border border-amber-400'
                   }`}>
-                    <span className="text-[9px] uppercase tracking-wider text-emerald-100 font-semibold">STATUS</span>
-                    <span className="text-base font-black">{scannedResult.status}</span>
-                  </div>
+                    {scannedResult.status}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (scanTimeoutRef.current) {
+                        clearTimeout(scanTimeoutRef.current);
+                      }
+                      setScannerStatus('SCANNING');
+                      setScannedResult(null);
+                      setErrorMsg('');
+                    }}
+                    className="bg-slate-800 hover:bg-slate-700 text-slate-200 p-2 rounded-xl transition-colors cursor-pointer"
+                    title="Siap scan berikutnya"
+                  >
+                    <RefreshCw className="w-4 h-4 text-emerald-400 animate-spin-slow" />
+                  </button>
                 </div>
-
-                {/* Gateway Routing Indicator */}
-                <div className="mt-5 w-full max-w-xs mx-auto bg-black/25 rounded-2xl p-3 border border-emerald-500/20 text-left text-xs space-y-1.5 shadow-inner">
-                  <div className="flex items-center justify-between text-emerald-200 text-[11px]">
-                    <span className="font-semibold text-emerald-300">Server Utama (WA Gateway):</span>
-                    <span className="font-mono font-black text-white">087844651559</span>
-                  </div>
-                  <div className="flex items-center justify-between text-[#E5DDD5] text-[11px]">
-                    <span className="font-semibold text-emerald-200">Tujuan Orang Tua / Wali:</span>
-                    <span className="font-mono font-black text-emerald-400">
-                      {scannedResult.pesanTerkirim?.match(/\(([^)]+)\)/)?.[1] || 'Terikirm'}
-                    </span>
-                  </div>
-                  <div className="text-[9px] text-emerald-100/50 border-t border-white/5 pt-1.5 mt-1.5 text-center flex items-center justify-center gap-1">
-                    <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
-                    <span>Gateway Status: <span className="text-emerald-400 font-bold font-mono">SENT SUCCESSFUL</span></span>
-                  </div>
-                </div>
-
-                <p className="text-[10px] text-emerald-100/90 mt-4 italic">
-                  Notifikasi WA berhasil diproses melalui Server Utama sebelum diteruskan ke Orang Tua siswa.
-                </p>
-                <button
-                  type="button"
-                  id="btn-scan-next-instant"
-                  onClick={() => {
-                    if (scanTimeoutRef.current) {
-                      clearTimeout(scanTimeoutRef.current);
-                    }
-                    setScannerStatus('SCANNING');
-                    setScannedResult(null);
-                    setErrorMsg('');
-                  }}
-                  className="mt-4 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-xs py-2.5 px-6 rounded-2xl shadow-lg cursor-pointer transition-all active:scale-95 flex items-center gap-1.5 border border-emerald-400 select-none"
-                >
-                  <RefreshCw className="w-3.5 h-3.5 animate-spin-slow text-white" />
-                  Lewati & Pindai Murid Selanjutnya &rarr;
-                </button>
               </div>
             )}
           </div>
