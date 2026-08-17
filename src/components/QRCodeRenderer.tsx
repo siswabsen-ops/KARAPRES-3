@@ -2,13 +2,15 @@ import { useEffect, useRef } from 'react';
 import QRCode from 'qrcode';
 
 interface QRCodeRendererProps {
-  value: string; // The NIS (digits only, e.g. "12345678")
+  value: string; // The NIS, NIK, or identifier
+  label?: string; // Optional custom label, e.g. "NIK 3205..." or "NIS 30409"
   size?: number;
   showText?: boolean;
 }
 
 export default function QRCodeRenderer({
   value,
+  label,
   size = 180,
   showText = true,
 }: QRCodeRendererProps) {
@@ -54,17 +56,28 @@ export default function QRCodeRenderer({
         // Drawing offscreen QR Code onto the target visible canvas
         ctx.drawImage(tempCanvas, 0, 0, size, size);
 
-        // NIS code at bottom
+        // Display identifier label at bottom
         if (showText) {
           ctx.fillStyle = '#1e293b'; // slate-800
-          ctx.font = 'bold 12px "JetBrains Mono", monospace';
+          ctx.font = 'bold 11px "JetBrains Mono", monospace';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
-          ctx.fillText(`NIS ${value}`, size / 2, size + (textHeight / 2));
+          
+          let displayLabel = label;
+          if (!displayLabel) {
+            if (value.length === 16 && /^\d+$/.test(value)) {
+              displayLabel = `NIK ${value}`;
+            } else if (/^\d{5,10}$/.test(value)) {
+              displayLabel = `NIS ${value}`;
+            } else {
+              displayLabel = `ID: ${value}`;
+            }
+          }
+          ctx.fillText(displayLabel, size / 2, size + (textHeight / 2));
         }
       }
     );
-  }, [value, size, showText]);
+  }, [value, label, size, showText]);
 
   const handleDownload = () => {
     const canvas = canvasRef.current;

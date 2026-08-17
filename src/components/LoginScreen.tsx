@@ -118,12 +118,19 @@ export default function LoginScreen({ onLoginSuccess, accountsList }: LoginScree
             <div className="flex items-center gap-3 mb-2">
               <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center p-1 shadow-md border border-white/30 shrink-0 overflow-hidden">
                 <img 
-                  src={DIGIWANGI_LOGO_BASE64} 
+                  src={digiwangiLogo || '/logo.png'} 
                   alt="Logo DIGIWANGI 3" 
                   referrerPolicy="no-referrer"
                   loading="eager"
                   decoding="sync"
-                  onError={(e) => { (e.currentTarget as HTMLImageElement).src = digiwangiLogo; }}
+                  onError={(e) => { 
+                    const target = e.currentTarget as HTMLImageElement;
+                    if (target.src !== '/logo.png') {
+                      target.src = '/logo.png';
+                    } else {
+                      target.src = DIGIWANGI_LOGO_BASE64;
+                    }
+                  }}
                   className="w-full h-full object-contain"
                 />
               </div>
@@ -194,12 +201,19 @@ export default function LoginScreen({ onLoginSuccess, accountsList }: LoginScree
               title="Klik aku untuk melihat keunggulan!"
             >
               <img 
-                src={DIGIWANGI_MASCOT_BASE64} 
+                src={digiwangiMascot || '/mascot.png'} 
                 alt="Mascot DigiWangi 3" 
                 referrerPolicy="no-referrer"
                 loading="eager"
                 decoding="sync"
-                onError={(e) => { (e.currentTarget as HTMLImageElement).src = digiwangiMascot; }}
+                onError={(e) => { 
+                  const target = e.currentTarget as HTMLImageElement;
+                  if (target.src !== '/mascot.png') {
+                    target.src = '/mascot.png';
+                  } else {
+                    target.src = DIGIWANGI_MASCOT_BASE64;
+                  }
+                }}
                 className="w-full h-full object-contain"
               />
               

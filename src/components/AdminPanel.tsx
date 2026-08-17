@@ -14,9 +14,16 @@ import {
   FileCheck,
   Printer,
   ChevronRight,
-  UserCheck
+  UserCheck,
+  ArrowRightLeft,
+  Search,
+  Filter,
+  ShieldCheck,
+  HelpCircle,
+  Sparkles,
+  QrCode,
 } from 'lucide-react';
-import { Siswa, SystemSettings, ActivityLog, User, Role, DAFTAR_KELAS } from '../types';
+import { Siswa, SystemSettings, ActivityLog, User, Role, DAFTAR_KELAS, StatusDapodik, QRIdentifierType, getStudentQRIdentifier } from '../types';
 import { DAFTAR_WALI_KELAS, getWaliKelasByKelas } from '../lib/demoData';
 import QRCodeRenderer from './QRCodeRenderer';
 import BatchQRPrintModal from './BatchQRPrintModal';
@@ -77,10 +84,23 @@ export default function AdminPanel({
   // Local states for Siswa Form
   const [isEditingSiswa, setIsEditingSiswa] = useState<string | null>(null); // Siswa ID
   const [nis, setNis] = useState('');
+  const [nik, setNik] = useState('');
+  const [nisn, setNisn] = useState('');
+  const [statusDapodik, setStatusDapodik] = useState<StatusDapodik>('Sudah Dapodik');
+  const [qrIdentifierType, setQrIdentifierType] = useState<QRIdentifierType>('NIS');
   const [nama, setNama] = useState('');
   const [kelas, setKelas] = useState('Kelas 1-A');
   const [jk, setJk] = useState<'L' | 'P'>('L');
   const [waOrangTua, setWaOrangTua] = useState('');
+
+  // Student directory filters & search
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterKelas, setFilterKelas] = useState('Semua Kelas');
+  const [filterDapodik, setFilterDapodik] = useState<'semua' | 'sudah' | 'belum'>('semua');
+
+  // Quick Move Class Modal State
+  const [quickMoveSiswa, setQuickMoveSiswa] = useState<Siswa | null>(null);
+  const [targetMoveKelas, setTargetMoveKelas] = useState<string>('Kelas 1-A');
 
   // Custom modal state for deleting student
   const [siswaToDelete, setSiswaToDelete] = useState<Siswa | null>(null);
@@ -192,23 +212,45 @@ export default function AdminPanel({
     setIsAddingNewAccount(false);
   };
 
-  // Submit handler for CRUD student
+  // Submit handler for CRUD student with Dapodik and NIK support
   const handleSiswaSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!nis.trim() || !nama.trim() || !waOrangTua.trim()) {
-      displayNotice('err', 'Semua formulir pendaftaran siswa wajib diisi penuh.');
+    if (!nama.trim() || !waOrangTua.trim()) {
+      displayNotice('err', 'Nama lengkap dan nomor WhatsApp wali murid wajib diisi.');
       return;
     }
 
-    // NIS validation
-    if (!isEditingSiswa && siswaList.some((s) => s.nis === nis.trim())) {
-      displayNotice('err', `Data gagal disimpan. NIS ${nis} sudah terdaftar di sistem.`);
+    const isBelumDapodik = statusDapodik === 'Belum Dapodik';
+
+    // If student is not yet in Dapodik, NIK or NIS must be present
+    if (isBelumDapodik && !nik.trim() && !nis.trim()) {
+      displayNotice('err', 'Untuk siswa yang belum masuk Dapodik, mohon isi NIK (Nomor Induk Kependudukan) atau NIS.');
+      return;
+    }
+
+    // Determine finalized NIS
+    let finalNis = nis.trim();
+    if (!finalNis) {
+      if (isBelumDapodik && nik.trim()) {
+        finalNis = `REG-${nik.trim().slice(-6)}`;
+      } else {
+        finalNis = `SIS-${Date.now().toString().slice(-5)}`;
+      }
+    }
+
+    // NIS uniqueness validation when creating new student
+    if (!isEditingSiswa && siswaList.some((s) => s.nis.toLowerCase() === finalNis.toLowerCase())) {
+      displayNotice('err', `Data gagal disimpan. NIS ${finalNis} sudah terdaftar di sistem.`);
       return;
     }
 
     const payload: Siswa = {
       id: isEditingSiswa || `sis-${Date.now()}`,
-      nis: nis.trim(),
+      nis: finalNis,
+      nik: nik.trim() || undefined,
+      nisn: nisn.trim() || undefined,
+      statusDapodik,
+      qrIdentifierType: isBelumDapodik ? (qrIdentifierType || 'NIK') : qrIdentifierType,
       nama: nama.trim(),
       kelas,
       jenisKelamin: jk,
@@ -217,15 +259,24 @@ export default function AdminPanel({
 
     if (isEditingSiswa) {
       onUpdateSiswa(payload);
-      displayNotice('success', `Berhasil memperbarui data siswa: ${nama}`);
+      displayNotice('success', `Berhasil memperbarui data siswa: ${nama} (${kelas})`);
       setIsEditingSiswa(null);
     } else {
       onAddSiswa(payload);
-      displayNotice('success', `Berhasil mendaftarkan siswa baru: ${nama}`);
+      displayNotice('success', `Berhasil mendaftarkan siswa baru: ${nama} (${kelas})`);
     }
 
     // Reset Form
+    resetSiswaForm();
+  };
+
+  const resetSiswaForm = () => {
+    setIsEditingSiswa(null);
     setNis('');
+    setNik('');
+    setNisn('');
+    setStatusDapodik('Sudah Dapodik');
+    setQrIdentifierType('NIS');
     setNama('');
     setKelas('Kelas 1-A');
     setJk('L');
@@ -235,6 +286,10 @@ export default function AdminPanel({
   const handleEditClick = (siswa: Siswa) => {
     setIsEditingSiswa(siswa.id);
     setNis(siswa.nis);
+    setNik(siswa.nik || '');
+    setNisn(siswa.nisn || '');
+    setStatusDapodik(siswa.statusDapodik || 'Sudah Dapodik');
+    setQrIdentifierType(siswa.qrIdentifierType || (siswa.statusDapodik === 'Belum Dapodik' ? 'NIK' : 'NIS'));
     setNama(siswa.nama);
     setKelas(siswa.kelas);
     setJk(siswa.jenisKelamin);
@@ -243,12 +298,20 @@ export default function AdminPanel({
   };
 
   const handleCancelEdit = () => {
-    setIsEditingSiswa(null);
-    setNis('');
-    setNama('');
-    setKelas('Kelas 1-A');
-    setJk('L');
-    setWaOrangTua('');
+    resetSiswaForm();
+  };
+
+  // Quick Move Class handler
+  const handleQuickMoveSubmit = () => {
+    if (!quickMoveSiswa) return;
+    const oldKelas = quickMoveSiswa.kelas;
+    const updated: Siswa = {
+      ...quickMoveSiswa,
+      kelas: targetMoveKelas,
+    };
+    onUpdateSiswa(updated);
+    displayNotice('success', `Siswa "${quickMoveSiswa.nama}" berhasil dipindahkan dari ${oldKelas} ke ${targetMoveKelas}.`);
+    setQuickMoveSiswa(null);
   };
 
   // Save Settings actions
@@ -559,53 +622,157 @@ export default function AdminPanel({
                 id="siswa-form-ref" 
                 className={`md:col-span-5 bg-white rounded-3xl p-5 border transition-all duration-300 self-start ${
                   isEditingSiswa 
-                    ? 'border-red-500 ring-4 ring-red-50/70 shadow-xl scale-[1.01]' 
+                    ? 'border-indigo-500 ring-4 ring-indigo-50/70 shadow-xl scale-[1.01]' 
                     : 'border-slate-250 shadow-sm'
                 }`}
               >
-                <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider mb-4 border-b border-gray-100 pb-2.5 flex items-center gap-2 font-display">
-                  <UserPlus className="w-4.5 h-4.5 text-red-700 font-bold" />
-                  {isEditingSiswa ? '✏️ EDIT DATA SISWA' : '📝 DAFTAR SISWA BARU'}
+                <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider mb-3 border-b border-gray-100 pb-2.5 flex items-center justify-between font-display">
+                  <span className="flex items-center gap-2">
+                    <UserPlus className="w-4.5 h-4.5 text-indigo-700 font-bold" />
+                    {isEditingSiswa ? '✏️ EDIT DATA & PINDAH KELAS' : '📝 PENDAFTARAN SISWA BARU'}
+                  </span>
+                  {isEditingSiswa && (
+                    <span className="text-[10px] bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded-full uppercase">
+                      Mode Edit
+                    </span>
+                  )}
                 </h3>
 
                 {isEditingSiswa && (
-                  <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-800 rounded-xl text-[11px] font-semibold flex items-center gap-2 animate-in slide-in-from-top-2 duration-200">
-                    <span className="w-2 h-2 bg-red-700 rounded-full animate-ping shrink-0" />
-                    <span>Anda sedang menyunting profil: <b>{nama}</b> (NIS {nis})</span>
+                  <div className="mb-4 p-3 bg-indigo-50 border border-indigo-200 text-indigo-900 rounded-2xl text-[11px] font-semibold flex items-center gap-2">
+                    <span className="w-2 h-2 bg-indigo-700 rounded-full animate-ping shrink-0" />
+                    <span>Menyunting: <b>{nama}</b> ({kelas}). Anda dapat memindahkan kelas atau memperbarui NIK/NIS di form bawah.</span>
                   </div>
                 )}
 
-                <form onSubmit={handleSiswaSubmit} className="space-y-4 font-sans">
+                <form onSubmit={handleSiswaSubmit} className="space-y-3.5 font-sans">
+                  {/* Status Dapodik Selection Toggle */}
                   <div>
-                    <label className="block text-[11px] font-bold text-gray-700 uppercase mb-1">Nomor Induk Siswa (NIS)</label>
+                    <label className="block text-[11px] font-black text-slate-700 uppercase mb-1.5 flex items-center gap-1.5">
+                      <ShieldCheck className="w-3.5 h-3.5 text-indigo-600" />
+                      <span>Status Data Dapodik:</span>
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setStatusDapodik('Sudah Dapodik');
+                          setQrIdentifierType('NIS');
+                        }}
+                        className={`p-2 rounded-xl text-left border transition-all cursor-pointer ${
+                          statusDapodik === 'Sudah Dapodik'
+                            ? 'bg-emerald-50 border-emerald-500 text-emerald-900 ring-2 ring-emerald-200 font-bold'
+                            : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                        }`}
+                      >
+                        <div className="text-xs font-bold flex items-center gap-1">
+                          <span>✅ Sudah Dapodik</span>
+                        </div>
+                        <p className="text-[9.5px] text-slate-500 mt-0.5">Memiliki NISN / NIS resmi</p>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setStatusDapodik('Belum Dapodik');
+                          setQrIdentifierType('NIK');
+                        }}
+                        className={`p-2 rounded-xl text-left border transition-all cursor-pointer ${
+                          statusDapodik === 'Belum Dapodik'
+                            ? 'bg-amber-50 border-amber-500 text-amber-900 ring-2 ring-amber-200 font-bold'
+                            : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                        }`}
+                      >
+                        <div className="text-xs font-bold flex items-center gap-1">
+                          <span>⚠️ Belum Dapodik</span>
+                        </div>
+                        <p className="text-[9.5px] text-slate-500 mt-0.5">Siswa baru / Gunakan NIK</p>
+                      </button>
+                    </div>
+                  </div>
+
+                  {statusDapodik === 'Belum Dapodik' && (
+                    <div className="p-3 bg-amber-50/80 border border-amber-300 rounded-2xl text-[11px] text-amber-900 leading-relaxed">
+                      💡 <b>Siswa Belum Masuk Dapodik:</b> QR Code absensi dapat dibuat otomatis menggunakan <b>NIK (Nomor Induk Kependudukan)</b> orang tua/anak sehingga siswa langsung bisa memindai absensi tanpa menunggu sinkronisasi Dapodik pusat.
+                    </div>
+                  )}
+
+                  {/* NIK Input Field */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-700 uppercase mb-1 flex items-center justify-between">
+                      <span>Nomor Induk Kependudukan (NIK)</span>
+                      {statusDapodik === 'Belum Dapodik' && (
+                        <span className="text-amber-700 font-extrabold text-[10px]">Wajib Untuk QR Belum Dapodik</span>
+                      )}
+                    </label>
                     <input
                       type="text"
-                      value={nis}
-                      onChange={(e) => setNis(e.target.value)}
-                      placeholder="Isi NIS unik (contoh: 30409)"
-                      disabled={!!isEditingSiswa}
-                      className="w-full bg-white border border-gray-300 rounded-xl py-1.5 px-3 text-xs focus:outline-none focus:ring-2 focus:ring-red-750 font-mono disabled:bg-slate-100 disabled:text-slate-400"
+                      value={nik}
+                      onChange={(e) => setNik(e.target.value.replace(/[^0-9]/g, ''))}
+                      maxLength={16}
+                      placeholder="16 Digit NIK Siswa (contoh: 3205123456780001)"
+                      className={`w-full bg-white border rounded-xl py-1.5 px-3 text-xs focus:outline-none focus:ring-2 font-mono ${
+                        statusDapodik === 'Belum Dapodik' && !nik
+                          ? 'border-amber-300 focus:ring-amber-500 bg-amber-50/20'
+                          : 'border-gray-300 focus:ring-indigo-600'
+                      }`}
                     />
                   </div>
 
+                  {/* NIS and NISN Grid */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-bold text-gray-700 uppercase mb-1">
+                        NIS (Nomor Induk)
+                      </label>
+                      <input
+                        type="text"
+                        value={nis}
+                        onChange={(e) => setNis(e.target.value)}
+                        placeholder={statusDapodik === 'Belum Dapodik' ? 'Otomatis dibuat' : 'Contoh: 30409'}
+                        disabled={!!isEditingSiswa}
+                        className="w-full bg-white border border-gray-300 rounded-xl py-1.5 px-3 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600 font-mono disabled:bg-slate-100 disabled:text-slate-400"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-gray-700 uppercase mb-1">
+                        NISN (Opsional)
+                      </label>
+                      <input
+                        type="text"
+                        value={nisn}
+                        onChange={(e) => setNisn(e.target.value.replace(/[^0-9]/g, ''))}
+                        maxLength={10}
+                        placeholder="10 Digit NISN"
+                        className="w-full bg-white border border-gray-300 rounded-xl py-1.5 px-3 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600 font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Nama Lengkap */}
                   <div>
                     <label className="block text-[11px] font-bold text-gray-700 uppercase mb-1">Nama Lengkap Murid</label>
                     <input
                       type="text"
                       value={nama}
                       onChange={(e) => setNama(e.target.value)}
-                      placeholder="Nama lengkap tanpa gelar"
-                      className="w-full bg-white border border-gray-300 rounded-xl py-1.5 px-3 text-xs focus:outline-none focus:ring-2 focus:ring-red-750"
+                      placeholder="Nama lengkap murid tanpa gelar"
+                      className="w-full bg-white border border-gray-300 rounded-xl py-1.5 px-3 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600"
                     />
                   </div>
 
+                  {/* Kelas Selector (with Pindah Kelas highlight) & Gender */}
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-[11px] font-bold text-gray-700 uppercase mb-1">Kelas SDN 3</label>
+                      <label className="block text-[11px] font-black text-indigo-900 uppercase mb-1 flex items-center justify-between">
+                        <span>Pilih / Ganti Kelas</span>
+                        <ArrowRightLeft className="w-3 h-3 text-indigo-600" />
+                      </label>
                       <select
                         value={kelas}
                         onChange={(e) => setKelas(e.target.value)}
-                        className="w-full bg-white border border-gray-300 rounded-xl py-1.5 px-3 text-xs focus:outline-none focus:ring-2 focus:ring-red-750 font-semibold text-slate-700"
+                        className="w-full bg-indigo-50/60 border-2 border-indigo-300 focus:border-indigo-600 rounded-xl py-1.5 px-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600 font-bold text-indigo-900"
                       >
                         {DAFTAR_KELAS.map((k) => (
                           <option key={k} value={k}>
@@ -622,7 +789,7 @@ export default function AdminPanel({
                           type="button"
                           onClick={() => setJk('L')}
                           className={`flex-1 py-1 px-1 rounded-md text-center font-bold relative cursor-pointer ${
-                            jk === 'L' ? 'bg-red-700 text-white shadow-xs' : 'text-slate-500'
+                            jk === 'L' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-500'
                           }`}
                         >
                           Laki-Laki
@@ -631,7 +798,7 @@ export default function AdminPanel({
                           type="button"
                           onClick={() => setJk('P')}
                           className={`flex-1 py-1 px-1 rounded-md text-center font-bold relative cursor-pointer ${
-                            jk === 'P' ? 'bg-red-700 text-white shadow-xs' : 'text-slate-500'
+                            jk === 'P' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-500'
                           }`}
                         >
                           Perempuan
@@ -640,6 +807,24 @@ export default function AdminPanel({
                     </div>
                   </div>
 
+                  {/* Identifier QR Code Type */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-700 uppercase mb-1 flex items-center gap-1">
+                      <QrCode className="w-3 h-3 text-indigo-600" />
+                      <span>Identitas Utama Cetak QR Code:</span>
+                    </label>
+                    <select
+                      value={qrIdentifierType}
+                      onChange={(e) => setQrIdentifierType(e.target.value as QRIdentifierType)}
+                      className="w-full bg-white border border-gray-300 rounded-xl py-1.5 px-3 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600 font-medium text-slate-700"
+                    >
+                      <option value="NIS">📌 Gunakan NIS Resmi ({nis || 'Sesuai NIS'})</option>
+                      <option value="NIK">🆔 Gunakan NIK Kependudukan ({nik || 'Sesuai NIK'} - Rekomendasi Belum Dapodik)</option>
+                      <option value="NISN">🎓 Gunakan NISN Nasional ({nisn || 'Sesuai NISN'})</option>
+                    </select>
+                  </div>
+
+                  {/* WhatsApp Orang Tua */}
                   <div>
                     <label className="block text-[11px] font-bold text-gray-700 uppercase mb-1">Nomor WhatsApp Wali</label>
                     <input
@@ -647,18 +832,19 @@ export default function AdminPanel({
                       value={waOrangTua}
                       onChange={(e) => setWaOrangTua(e.target.value)}
                       placeholder="Isi No HP orang tua/wali (misal: 0812345678)"
-                      className="w-full bg-white border border-gray-300 rounded-xl py-1.5 px-3 text-xs focus:outline-none focus:ring-2 focus:ring-red-750"
+                      className="w-full bg-white border border-gray-300 rounded-xl py-1.5 px-3 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-600"
                     />
-                    <p className="text-[10px] text-gray-400 mt-1">Kami otomatis memoles awalan 0 ke nomor internasional saat kirim WA.</p>
+                    <p className="text-[10px] text-gray-400 mt-1">Otomatis diformat saat pengiriman notifikasi kehadiran gateway.</p>
                   </div>
 
+                  {/* Action buttons */}
                   <div className="flex gap-2.5 pt-2">
                     <button
                       type="submit"
                       id="btn-action-save-siswa"
-                      className="flex-1 bg-red-700 hover:bg-red-800 text-white rounded-xl py-2 font-bold text-xs transition-all shadow-md cursor-pointer block text-center"
+                      className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl py-2.5 font-bold text-xs transition-all shadow-md cursor-pointer block text-center"
                     >
-                      {isEditingSiswa ? 'Terapkan Update' : 'Daftarkan Siswa'}
+                      {isEditingSiswa ? '💾 Simpan Perubahan & Kelas' : '➕ Daftarkan Siswa Sekarang'}
                     </button>
                     {isEditingSiswa && (
                       <button
@@ -678,10 +864,11 @@ export default function AdminPanel({
               <div className="md:col-span-7 space-y-4">
                 {/* Visual Card Generator Preview Station (If selected) */}
                 {selectedPrintSiswa ? (
-                  <div className="bg-white rounded-3xl p-5 border-2 border-rose-550 shadow-md text-center space-y-4">
+                  <div className="bg-white rounded-3xl p-5 border-2 border-indigo-600 shadow-md text-center space-y-4">
                     <div className="flex justify-between items-center border-b border-gray-150 pb-2">
-                      <h4 className="text-xs font-black text-rose-600 uppercase tracking-wider">
-                        📛 PEMBUATAN KARTU ABSENSI ELEKTRONIK SISWA
+                      <h4 className="text-xs font-black text-indigo-700 uppercase tracking-wider flex items-center gap-1.5">
+                        <QrCode className="w-4 h-4 text-indigo-600" />
+                        KARTU ABSENSI ELEKTRONIK SISWA
                       </h4>
                       <button
                         type="button"
@@ -696,39 +883,51 @@ export default function AdminPanel({
                     <div className="max-w-[280px] mx-auto p-4 bg-slate-50 border border-slate-200 rounded-2xl">
                       {/* Virtual QR Code canvas container target inside print frame */}
                       <div id="qrcode-print-canvas-area">
-                        <QRCodeRenderer value={selectedPrintSiswa.nis} />
+                        <QRCodeRenderer 
+                          value={getStudentQRIdentifier(selectedPrintSiswa)} 
+                          label={selectedPrintSiswa.statusDapodik === 'Belum Dapodik' ? `NIK: ${selectedPrintSiswa.nik || selectedPrintSiswa.nis}` : `NIS: ${selectedPrintSiswa.nis}`}
+                        />
                       </div>
                       
                       <div className="mt-3">
                         <h5 className="font-extrabold text-sm text-slate-800 leading-none">{selectedPrintSiswa.nama}</h5>
-                        <p className="text-[10px] text-slate-500 font-mono tracking-wide mt-1.5">
-                          {selectedPrintSiswa.kelas} • NIS {selectedPrintSiswa.nis}
+                        <p className="text-[10px] text-indigo-700 font-bold font-mono tracking-wide mt-1.5">
+                          {selectedPrintSiswa.kelas} • {selectedPrintSiswa.statusDapodik === 'Belum Dapodik' ? `NIK: ${selectedPrintSiswa.nik || '-'}` : `NIS: ${selectedPrintSiswa.nis}`}
                         </p>
                       </div>
                     </div>
 
                     <p className="text-[10px] text-gray-500 leading-normal">
-                      Gunakan tombol cetak di bawah untuk mencetak kartu ini dengan ukuran pas, tempel pada gantungan kartu siswa!
+                      Kartu sudah siap diprint dan ditempelkan pada wadah lanyard/gantungan siswa.
                     </p>
 
                     <button
                       type="button"
                       id="btn-print-qrcode"
                       onClick={() => triggerPrintWindow('qrcode-print-canvas-area')}
-                      className="inline-flex items-center gap-1.5 bg-rose-600 hover:bg-rose-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow cursor-pointer"
+                      className="inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow cursor-pointer"
                     >
-                      <Printer className="w-4 h-4" />
+                      <Printer className="w-4 h-4 text-amber-300" />
                       Cetak Kartu Siswa & QR Code
                     </button>
                   </div>
                 ) : null}
 
                 {/* Primary Student Directory */}
-                <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-sm">
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 mb-4 border-b border-slate-100 pb-3">
-                    <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">
-                      📋 DIREKTORI SISWA SDN 3 ({siswaList.length} Anak)
-                    </h3>
+                <div className="bg-white rounded-3xl p-5 border border-gray-100 shadow-sm space-y-3">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 border-b border-slate-100 pb-3">
+                    <div>
+                      <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                        <span>📋 DIREKTORI SISWA SDN 3</span>
+                        <span className="bg-indigo-50 text-indigo-700 text-xs px-2 py-0.5 rounded-full font-bold">
+                          {siswaList.length} Anak
+                        </span>
+                      </h3>
+                      <p className="text-[11px] text-slate-500 mt-0.5">
+                        Kelola data murid, pindah kelas secara instan, dan buat QR Code NIK/NIS.
+                      </p>
+                    </div>
+
                     <div className="flex flex-wrap items-center gap-2">
                       <button
                         type="button"
@@ -738,7 +937,7 @@ export default function AdminPanel({
                         title="Cetak kartu QR Code untuk semua siswa atau per kelas"
                       >
                         <Printer className="w-3.5 h-3.5 text-amber-300" />
-                        <span>🖨️ Cetak QR Massal (Per Kelas)</span>
+                        <span>🖨️ Cetak QR Massal</span>
                       </button>
 
                       {onSyncFromGoogle && (
@@ -750,70 +949,183 @@ export default function AdminPanel({
                           title="Tarik dan perbarui data siswa dari Google Spreadsheet"
                         >
                           <Database className="w-3.5 h-3.5" />
-                          <span>{isSyncing ? 'Menyinkronkan...' : '📥 Sync dari Spreadsheet'}</span>
+                          <span>{isSyncing ? 'Sync...' : '📥 Sync'}</span>
                         </button>
                       )}
                     </div>
                   </div>
 
-                  <div className="space-y-2.5 max-h-[460px] overflow-y-auto pr-1">
-                    {siswaList.map((siswa) => (
-                      <div
-                        key={siswa.id}
-                        className="p-3 bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-between gap-3 text-xs"
+                  {/* Filter & Search Toolbar */}
+                  <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 text-xs">
+                    <div className="relative flex-1">
+                      <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <input
+                        type="text"
+                        placeholder="Cari nama, NIS, NIK, NISN..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full bg-white border border-slate-200 pl-8 pr-3 py-1.5 rounded-xl outline-none focus:border-indigo-500 font-medium text-xs"
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-1.5">
+                      <select
+                        value={filterKelas}
+                        onChange={(e) => setFilterKelas(e.target.value)}
+                        className="bg-white border border-slate-200 text-slate-700 font-bold rounded-xl px-2.5 py-1.5 outline-none focus:border-indigo-500 text-[11px]"
                       >
-                        <div className="flex items-center gap-2.5 max-w-[60%]">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs uppercase ${
-                            siswa.jenisKelamin === 'L' ? 'bg-sky-100 text-sky-800' : 'bg-rose-100 text-rose-800'
-                          }`}>
-                            {siswa.nama.charAt(0)}
-                          </div>
-                          <div className="truncate">
-                            <h4 className="font-bold text-gray-800 truncate leading-none">{siswa.nama}</h4>
-                            <span className="text-[10px] text-slate-500 mt-1 block">
-                              NIS {siswa.nis} • <b>{siswa.kelas}</b>
-                            </span>
-                            <span className="text-[9px] text-indigo-700 block mt-0.5">
-                              📞 WA Wali: {siswa.waOrangTua}
-                            </span>
-                          </div>
-                        </div>
+                        <option value="Semua Kelas">Semua Kelas</option>
+                        {DAFTAR_KELAS.map((k) => (
+                          <option key={k} value={k}>{k}</option>
+                        ))}
+                      </select>
 
-                        {/* Direct action tools */}
-                        <div className="flex items-center gap-1.5">
-                          <button
-                            type="button"
-                            id={`btn-target-print-siswa-${siswa.nis}`}
-                            onClick={() => setSelectedPrintSiswa(siswa)}
-                            className="bg-sky-50 text-sky-600 hover:bg-sky-100 border border-sky-200 p-1.5 rounded-lg transition-colors cursor-pointer"
-                            title="Generate QR Code cetak"
-                          >
-                            <Printer className="w-3.5 h-3.5" />
-                          </button>
-                          
-                          <button
-                            type="button"
-                            id={`btn-target-edit-siswa-${siswa.nis}`}
-                            onClick={() => handleEditClick(siswa)}
-                            className="bg-amber-50 text-amber-600 hover:bg-amber-150 border border-amber-200 p-1.5 rounded-lg transition-colors cursor-pointer"
-                            title="Edit data siswa"
-                          >
-                            <Edit2 className="w-3.5 h-3.5" />
-                          </button>
-
-                          <button
-                            type="button"
-                            id={`btn-target-delete-siswa-${siswa.nis}`}
-                            onClick={() => setSiswaToDelete(siswa)}
-                            className="bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200 p-1.5 rounded-lg transition-colors cursor-pointer"
-                            title="Hapus data siswa"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
+                      <select
+                        value={filterDapodik}
+                        onChange={(e) => setFilterDapodik(e.target.value as any)}
+                        className="bg-white border border-slate-200 text-slate-700 font-bold rounded-xl px-2 py-1.5 outline-none focus:border-indigo-500 text-[11px]"
+                      >
+                        <option value="semua">Semua Dapodik</option>
+                        <option value="sudah">✅ Dapodik</option>
+                        <option value="belum">⚠️ Belum Dapodik (NIK)</option>
+                      </select>
+                    </div>
                   </div>
+
+                  {/* Student Records List */}
+                  {(() => {
+                    const filtered = siswaList.filter((s) => {
+                      const matchesKelas = filterKelas === 'Semua Kelas' || s.kelas.toLowerCase() === filterKelas.toLowerCase();
+                      let matchesDapodik = true;
+                      if (filterDapodik === 'sudah') matchesDapodik = s.statusDapodik !== 'Belum Dapodik';
+                      if (filterDapodik === 'belum') matchesDapodik = s.statusDapodik === 'Belum Dapodik';
+                      
+                      const q = searchQuery.toLowerCase();
+                      const matchesSearch = 
+                        s.nama.toLowerCase().includes(q) ||
+                        s.nis.toLowerCase().includes(q) ||
+                        (s.nik && s.nik.toLowerCase().includes(q)) ||
+                        (s.nisn && s.nisn.toLowerCase().includes(q));
+
+                      return matchesKelas && matchesDapodik && matchesSearch;
+                    });
+
+                    if (filtered.length === 0) {
+                      return (
+                        <div className="p-8 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-slate-500 text-xs">
+                          Tidak ada siswa yang sesuai dengan filter / pencarian.
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div className="space-y-2.5 max-h-[460px] overflow-y-auto pr-1">
+                        {filtered.map((siswa) => {
+                          const isBelumDapodik = siswa.statusDapodik === 'Belum Dapodik';
+                          return (
+                            <div
+                              key={siswa.id}
+                              className={`p-3 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs transition-all ${
+                                isBelumDapodik 
+                                  ? 'bg-amber-50/40 border-amber-200 hover:border-amber-300' 
+                                  : 'bg-slate-50 border-slate-200 hover:border-indigo-200'
+                              }`}
+                            >
+                              <div className="flex items-center gap-2.5 min-w-0">
+                                <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs uppercase shrink-0 ${
+                                  isBelumDapodik 
+                                    ? 'bg-amber-100 text-amber-900 border border-amber-300' 
+                                    : siswa.jenisKelamin === 'L' ? 'bg-sky-100 text-sky-800' : 'bg-rose-100 text-rose-800'
+                                }`}>
+                                  {siswa.nama.charAt(0)}
+                                </div>
+                                <div className="min-w-0">
+                                  <div className="flex items-center gap-2">
+                                    <h4 className="font-bold text-gray-900 truncate leading-none">{siswa.nama}</h4>
+                                    {isBelumDapodik ? (
+                                      <span className="bg-amber-500 text-white font-black text-[9px] px-1.5 py-0.5 rounded-md font-mono shrink-0">
+                                        BELUM DAPODIK
+                                      </span>
+                                    ) : (
+                                      <span className="bg-emerald-100 text-emerald-800 font-bold text-[9px] px-1.5 py-0.5 rounded-md shrink-0">
+                                        DAPODIK
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10.5px] text-slate-600 mt-1 font-mono">
+                                    <span className="font-bold bg-white px-2 py-0.5 rounded-md border border-slate-200 text-indigo-900">
+                                      {siswa.kelas}
+                                    </span>
+                                    {isBelumDapodik ? (
+                                      <span className="text-amber-800 font-bold">
+                                        NIK: {siswa.nik || siswa.nis}
+                                      </span>
+                                    ) : (
+                                      <span>
+                                        NIS: {siswa.nis} {siswa.nik ? `• NIK: ${siswa.nik}` : ''}
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  <span className="text-[10px] text-slate-500 block mt-0.5">
+                                    📞 WA Wali: <span className="font-mono">{siswa.waOrangTua}</span>
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Direct action tools: Pindah Kelas, Print, Edit, Delete */}
+                              <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-center">
+                                {/* Direct Quick Move Class Button */}
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setQuickMoveSiswa(siswa);
+                                    setTargetMoveKelas(siswa.kelas);
+                                  }}
+                                  className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 px-2.5 py-1.5 rounded-xl font-bold text-[11px] transition-colors cursor-pointer flex items-center gap-1"
+                                  title="Pindahkan siswa ke kelas lain secara cepat"
+                                >
+                                  <ArrowRightLeft className="w-3.5 h-3.5 text-indigo-600" />
+                                  <span>Pindah Kelas</span>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  id={`btn-target-print-siswa-${siswa.nis}`}
+                                  onClick={() => setSelectedPrintSiswa(siswa)}
+                                  className="bg-sky-50 text-sky-700 hover:bg-sky-100 border border-sky-200 p-1.5 rounded-xl transition-colors cursor-pointer"
+                                  title="Generate & Cetak QR Code Siswa"
+                                >
+                                  <Printer className="w-3.5 h-3.5" />
+                                </button>
+                                
+                                <button
+                                  type="button"
+                                  id={`btn-target-edit-siswa-${siswa.nis}`}
+                                  onClick={() => handleEditClick(siswa)}
+                                  className="bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 p-1.5 rounded-xl transition-colors cursor-pointer"
+                                  title="Edit data lengkap siswa"
+                                >
+                                  <Edit2 className="w-3.5 h-3.5" />
+                                </button>
+
+                                <button
+                                  type="button"
+                                  id={`btn-target-delete-siswa-${siswa.nis}`}
+                                  onClick={() => setSiswaToDelete(siswa)}
+                                  className="bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 p-1.5 rounded-xl transition-colors cursor-pointer"
+                                  title="Hapus data siswa"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
             </div>
@@ -1504,6 +1816,87 @@ export default function AdminPanel({
 
         </div>
       </div>
+
+      {/* CUSTOM QUICK MOVE CLASS MODAL */}
+      {quickMoveSiswa && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-[2px] flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl p-6 max-w-md w-full border border-slate-200 shadow-2xl text-left space-y-4 animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center font-black">
+                  <ArrowRightLeft className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="font-extrabold text-slate-800 text-sm font-display">Pindah Kelas Siswa</h4>
+                  <p className="text-[11px] text-slate-500">Koreksi atau pindahkan rombel siswa secara instan</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setQuickMoveSiswa(null)}
+                className="text-slate-400 hover:text-slate-600 text-xs font-bold p-1"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="bg-indigo-50/60 border border-indigo-100 rounded-2xl p-3.5 space-y-1.5">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-500 font-medium">Nama Siswa:</span>
+                <span className="font-extrabold text-slate-900">{quickMoveSiswa.nama}</span>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-500 font-medium">Identitas Siswa:</span>
+                <span className="font-mono text-slate-700 font-bold">
+                  {quickMoveSiswa.statusDapodik === 'Belum Dapodik' ? `NIK: ${quickMoveSiswa.nik || quickMoveSiswa.nis}` : `NIS: ${quickMoveSiswa.nis}`}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-500 font-medium">Kelas Saat Ini:</span>
+                <span className="bg-white border border-indigo-200 text-indigo-900 font-black px-2 py-0.5 rounded-md font-mono text-[11px]">
+                  {quickMoveSiswa.kelas}
+                </span>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-black text-slate-700 uppercase tracking-wider mb-2">
+                Pilih Kelas Baru:
+              </label>
+              <select
+                value={targetMoveKelas}
+                onChange={(e) => setTargetMoveKelas(e.target.value)}
+                className="w-full bg-white border-2 border-indigo-400 focus:border-indigo-600 rounded-xl py-2.5 px-3 text-xs font-black text-indigo-950 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-xs font-mono"
+              >
+                {DAFTAR_KELAS.map((k) => (
+                  <option key={k} value={k}>
+                    {k} {k === quickMoveSiswa.kelas ? '(Kelas Sekarang)' : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex gap-2.5 pt-2">
+              <button
+                type="button"
+                onClick={() => setQuickMoveSiswa(null)}
+                className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl py-2.5 font-bold text-xs transition-colors cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={handleQuickMoveSubmit}
+                disabled={targetMoveKelas === quickMoveSiswa.kelas}
+                className="flex-1 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-xl py-2.5 font-bold text-xs transition-all shadow-md cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <Check className="w-4 h-4" />
+                <span>Simpan Pindah Kelas</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* CUSTOM DELETE CONFIRMATION DIALOG (IFRAME-SAFE) */}
       {siswaToDelete && (

@@ -214,12 +214,19 @@ export default function MascotPromoAssistant() {
             title="Klik aku untuk asisten & promo!"
           >
             <img 
-              src={DIGIWANGI_MASCOT_BASE64} 
+              src={digiwangiMascot || '/mascot.png'} 
               alt="Mascot Digi-Wangi" 
               referrerPolicy="no-referrer"
               loading="eager"
               decoding="sync"
-              onError={(e) => { (e.currentTarget as HTMLImageElement).src = digiwangiMascot; }}
+              onError={(e) => { 
+                const target = e.currentTarget as HTMLImageElement;
+                if (target.src !== '/mascot.png') {
+                  target.src = '/mascot.png';
+                } else {
+                  target.src = DIGIWANGI_MASCOT_BASE64;
+                }
+              }}
               className="w-full h-full object-contain rounded-full"
             />
             

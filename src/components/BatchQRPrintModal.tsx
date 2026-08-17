@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Printer, X, Filter, Search, Sparkles, Check, Download, Layers } from 'lucide-react';
+import { Printer, X, Filter, Search, Sparkles, Check, Download, Layers, ShieldCheck, HelpCircle } from 'lucide-react';
 import QRCode from 'qrcode';
-import { Siswa, DAFTAR_KELAS } from '../types';
+import { Siswa, DAFTAR_KELAS, getStudentQRIdentifier } from '../types';
 
 interface BatchQRPrintModalProps {
   isOpen: boolean;
@@ -17,6 +17,7 @@ export default function BatchQRPrintModal({
   defaultKelas = 'Semua Kelas',
 }: BatchQRPrintModalProps) {
   const [selectedKelas, setSelectedKelas] = useState<string>(defaultKelas);
+  const [dapodikFilter, setDapodikFilter] = useState<'semua' | 'sudah' | 'belum'>('semua');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [qrMap, setQrMap] = useState<Record<string, string>>({});
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
@@ -25,17 +26,28 @@ export default function BatchQRPrintModal({
     setSelectedKelas(defaultKelas);
   }, [defaultKelas, isOpen]);
 
-  // Filter students by selected class and search query
+  // Filter students by selected class, dapodik status, and search query
   const filteredSiswa = siswaList.filter((s) => {
     const matchesKelas =
       selectedKelas === 'Semua Kelas' || s.kelas.toLowerCase() === selectedKelas.toLowerCase();
+    
+    let matchesDapodik = true;
+    if (dapodikFilter === 'sudah') {
+      matchesDapodik = s.statusDapodik !== 'Belum Dapodik';
+    } else if (dapodikFilter === 'belum') {
+      matchesDapodik = s.statusDapodik === 'Belum Dapodik';
+    }
+
+    const q = searchQuery.toLowerCase();
     const matchesSearch =
-      s.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      s.nis.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesKelas && matchesSearch;
+      s.nama.toLowerCase().includes(q) ||
+      s.nis.toLowerCase().includes(q) ||
+      (s.nik && s.nik.toLowerCase().includes(q)) ||
+      (s.nisn && s.nisn.toLowerCase().includes(q));
+    return matchesKelas && matchesDapodik && matchesSearch;
   });
 
-  // Generate QR Code base64 Data URLs for filtered students
+  // Generate QR Code base64 Data URLs for filtered students using NIK or NIS
   useEffect(() => {
     if (!isOpen) return;
 
@@ -46,7 +58,8 @@ export default function BatchQRPrintModal({
 
       for (const student of filteredSiswa) {
         try {
-          const url = await QRCode.toDataURL(student.nis, {
+          const qrPayload = getStudentQRIdentifier(student);
+          const url = await QRCode.toDataURL(qrPayload, {
             width: 280,
             margin: 1.5,
             errorCorrectionLevel: 'H',
@@ -55,9 +68,9 @@ export default function BatchQRPrintModal({
               light: '#ffffff',
             },
           });
-          newMap[student.nis] = url;
+          newMap[student.id || student.nis] = url;
         } catch (err) {
-          console.error(`Gagal membuat QR code untuk NIS ${student.nis}`, err);
+          console.error(`Gagal membuat QR code untuk ${student.nama}`, err);
         }
       }
 
@@ -72,7 +85,7 @@ export default function BatchQRPrintModal({
     return () => {
       isMounted = false;
     };
-  }, [isOpen, selectedKelas, searchQuery, siswaList]);
+  }, [isOpen, selectedKelas, dapodikFilter, searchQuery, siswaList]);
 
   if (!isOpen) return null;
 
@@ -94,7 +107,10 @@ export default function BatchQRPrintModal({
 
     const cardsHtml = filteredSiswa
       .map((siswa) => {
-        const qrUrl = qrMap[siswa.nis] || '';
+        const qrUrl = qrMap[siswa.id || siswa.nis] || '';
+        const isBelumDapodik = siswa.statusDapodik === 'Belum Dapodik';
+        const qrCodeIdentifier = getStudentQRIdentifier(siswa);
+
         return `
         <div class="card-item">
           <div class="header-banner">
@@ -104,12 +120,16 @@ export default function BatchQRPrintModal({
           <div class="qr-container">
             ${
               qrUrl
-                ? `<img src="${qrUrl}" class="qr-img" alt="QR NIS ${siswa.nis}" />`
-                : `<div class="qr-fallback">NIS ${siswa.nis}</div>`
+                ? `<img src="${qrUrl}" class="qr-img" alt="QR ${qrCodeIdentifier}" />`
+                : `<div class="qr-fallback">${qrCodeIdentifier}</div>`
             }
           </div>
           <div class="student-name">${siswa.nama}</div>
-          <div class="meta-info">NIS: ${siswa.nis} • <b>${siswa.kelas}</b></div>
+          <div class="meta-info">
+            ${isBelumDapodik ? `<span class="badge-nik">NIK: ${siswa.nik || qrCodeIdentifier} (Belum Dapodik)</span>` : `<span>NIS: ${siswa.nis}</span>`}
+            • <b>${siswa.kelas}</b>
+          </div>
+          ${siswa.nik && !isBelumDapodik ? `<div class="sub-info">NIK: ${siswa.nik}</div>` : ''}
           <div class="sub-info">📞 WA Wali: ${siswa.waOrangTua || '-'}</div>
           <div class="footer-tag">DIGIWANGI 3 Presensi • Cisurupan, Garut</div>
         </div>
@@ -158,91 +178,106 @@ export default function BatchQRPrintModal({
             .print-page-title p {
               margin: 4px 0 0 0;
               font-size: 10px;
-              color: #475569;
-              font-weight: 700;
+              color: #64748b;
             }
             .cards-grid {
               display: grid;
               grid-template-columns: repeat(2, 1fr);
-              gap: 14px;
+              gap: 12mm;
+              justify-content: center;
             }
             .card-item {
-              border: 3px solid #1d4ed8;
+              border: 2.5px solid #1d4ed8;
               border-radius: 16px;
-              padding: 14px 12px;
+              padding: 14px;
               text-align: center;
-              background-color: #ffffff;
+              background-color: white;
               page-break-inside: avoid;
-              break-inside: avoid;
               display: flex;
               flex-direction: column;
               align-items: center;
-              justify-content: space-between;
-              min-height: 270px;
+              box-shadow: none;
             }
             .header-banner {
               background-color: #1d4ed8;
               color: white;
-              padding: 6px 8px;
+              padding: 8px 6px;
               font-weight: 900;
-              font-size: 10px;
-              border-radius: 8px;
+              font-size: 11px;
+              border-radius: 10px;
               width: 100%;
               text-transform: uppercase;
-              letter-spacing: 0.5px;
+              letter-spacing: 0.3px;
               line-height: 1.3;
+              margin-bottom: 8px;
             }
             .header-banner span {
-              font-size: 9px;
-              opacity: 0.95;
+              font-size: 12px;
+              letter-spacing: 0.5px;
             }
             .qr-container {
-              margin: 8px 0;
+              margin: 6px 0;
               display: flex;
               justify-content: center;
               align-items: center;
             }
             .qr-img {
-              width: 130px;
-              height: 130px;
+              width: 140px;
+              height: 140px;
               object-fit: contain;
               image-rendering: -webkit-optimize-contrast;
+              image-rendering: crisp-edges;
+            }
+            .qr-fallback {
+              width: 140px;
+              height: 140px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              border: 1px dashed #94a3b8;
+              font-family: 'JetBrains Mono', monospace;
+              font-size: 11px;
+              color: #64748b;
             }
             .student-name {
               font-weight: 900;
               font-size: 13px;
               color: #0f172a;
               text-transform: uppercase;
-              line-height: 1.2;
               margin-top: 4px;
+              line-height: 1.2;
             }
             .meta-info {
-              font-size: 10px;
+              font-size: 11px;
               color: #334155;
               margin-top: 3px;
+              font-family: 'Inter', sans-serif;
+            }
+            .badge-nik {
               font-weight: 800;
+              color: #b91c1c;
+              font-family: 'JetBrains Mono', monospace;
             }
             .sub-info {
-              font-size: 9px;
+              font-size: 9.5px;
               color: #64748b;
               margin-top: 2px;
-              font-weight: 600;
             }
             .footer-tag {
-              font-size: 8px;
-              color: #94a3b8;
-              border-top: 1px dashed #cbd5e1;
               margin-top: 8px;
-              padding-top: 4px;
-              width: 100%;
+              padding-top: 6px;
+              border-top: 1px dashed #cbd5e1;
+              font-size: 8.5px;
+              color: #94a3b8;
               font-weight: 600;
+              width: 100%;
             }
           </style>
         </head>
         <body>
           <div class="print-page-title">
             <h1>KARTU QR CODE ABSENSI SISWA — ${selectedKelas.toUpperCase()}</h1>
-            <p>SD NEGERI 3 KARAMATWANGI • TOTAL ${filteredSiswa.length} SISWA SIAP CETAK</p>
+            <p>SDN 3 Karamatwangi • Kec. Cisurupan, Kab. Garut • Jumlah: ${filteredSiswa.length} Siswa</p>
           </div>
           <div class="cards-grid">
             ${cardsHtml}
@@ -278,7 +313,7 @@ export default function BatchQRPrintModal({
                 🖨️ CETAK KARTU & QR CODE MASSAL SISWA
               </h3>
               <p className="text-xs text-blue-100/90 font-medium">
-                Pilih kelas untuk mencetak semua kartu absensi QR Code sekaligus dalam 1 klik!
+                Mendukung QR Code dari NISN/NIS resmi maupun NIK (untuk siswa yang belum masuk Dapodik).
               </p>
             </div>
           </div>
@@ -293,63 +328,79 @@ export default function BatchQRPrintModal({
         </div>
 
         {/* Filter Controls Bar */}
-        <div className="bg-slate-50 border-b border-slate-200 p-4 shrink-0 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-          {/* Class Filter dropdown */}
+        <div className="bg-slate-50 border-b border-slate-200 p-4 shrink-0 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Class Filter dropdown */}
+            <div className="flex items-center gap-1.5">
+              <label className="text-xs font-bold text-slate-700 flex items-center gap-1 shrink-0">
+                <Filter className="w-3.5 h-3.5 text-indigo-600" />
+                <span>Kelas:</span>
+              </label>
+              <select
+                value={selectedKelas}
+                onChange={(e) => setSelectedKelas(e.target.value)}
+                className="bg-white border-2 border-indigo-200 focus:border-indigo-600 text-slate-800 text-xs font-extrabold rounded-xl px-2.5 py-1.5 shadow-sm outline-none cursor-pointer"
+              >
+                <option value="Semua Kelas">🏫 Semua Kelas ({siswaList.length})</option>
+                {DAFTAR_KELAS.map((k) => {
+                  const count = siswaList.filter((s) => s.kelas === k).length;
+                  return (
+                    <option key={k} value={k}>
+                      {k} ({count})
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+
+            {/* Status Dapodik Filter */}
+            <div className="flex items-center gap-1.5">
+              <select
+                value={dapodikFilter}
+                onChange={(e) => setDapodikFilter(e.target.value as any)}
+                className="bg-white border-2 border-slate-200 focus:border-indigo-600 text-slate-700 text-xs font-bold rounded-xl px-2.5 py-1.5 shadow-sm outline-none cursor-pointer"
+              >
+                <option value="semua">Semua Status Dapodik</option>
+                <option value="sudah">✅ Sudah Dapodik</option>
+                <option value="belum">⚠️ Belum Masuk Dapodik (NIK)</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Search box & Print button */}
           <div className="flex items-center gap-2">
-            <label className="text-xs font-bold text-slate-700 flex items-center gap-1 shrink-0">
-              <Filter className="w-3.5 h-3.5 text-indigo-600" />
-              <span>Filter Kelas:</span>
-            </label>
-            <select
-              value={selectedKelas}
-              onChange={(e) => setSelectedKelas(e.target.value)}
-              className="bg-white border-2 border-indigo-200 focus:border-indigo-600 text-slate-800 text-xs font-extrabold rounded-xl px-3 py-2 shadow-sm outline-none cursor-pointer"
+            <div className="relative flex-1 sm:w-48">
+              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Cari nama/NIS/NIK..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-white border border-slate-200 pl-8 pr-3 py-1.5 text-xs rounded-xl outline-none focus:border-indigo-500 font-medium"
+              />
+            </div>
+
+            <button
+              type="button"
+              onClick={handlePrintAll}
+              disabled={filteredSiswa.length === 0 || isGenerating}
+              className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-black text-xs px-3.5 py-2 rounded-xl transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
             >
-              <option value="Semua Kelas">🏫 Semua Kelas ({siswaList.length} Siswa)</option>
-              {DAFTAR_KELAS.map((k) => {
-                const count = siswaList.filter((s) => s.kelas === k).length;
-                return (
-                  <option key={k} value={k}>
-                    {k} ({count} Siswa)
-                  </option>
-                );
-              })}
-            </select>
+              <Printer className="w-4 h-4 text-amber-300" />
+              <span>
+                {isGenerating
+                  ? 'Menyiapkan...'
+                  : `Cetak (${filteredSiswa.length})`}
+              </span>
+            </button>
           </div>
-
-          {/* Search box */}
-          <div className="relative flex-1 max-w-xs">
-            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Cari nama / NIS siswa..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white border border-slate-200 pl-8 pr-3 py-1.5 text-xs rounded-xl outline-none focus:border-indigo-500 font-medium"
-            />
-          </div>
-
-          {/* Print Action button */}
-          <button
-            type="button"
-            onClick={handlePrintAll}
-            disabled={filteredSiswa.length === 0 || isGenerating}
-            className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-black text-xs px-4 py-2 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer shrink-0"
-          >
-            <Printer className="w-4 h-4 text-amber-300" />
-            <span>
-              {isGenerating
-                ? 'Menyiapkan QR Code...'
-                : `🖨️ Cetak ${filteredSiswa.length} Kartu (${selectedKelas})`}
-            </span>
-          </button>
         </div>
 
         {/* Modal Content - Live Cards Grid Preview */}
         <div className="p-4 sm:p-6 overflow-y-auto flex-1 bg-slate-100/60">
           <div className="flex items-center justify-between mb-3 px-1">
             <span className="text-xs font-bold text-slate-600">
-              Menampilkan <span className="text-indigo-700 font-black">{filteredSiswa.length}</span> siswa siap cetak
+              Menampilkan <span className="text-indigo-700 font-black">{filteredSiswa.length}</span> kartu siap cetak
             </span>
             {isGenerating && (
               <span className="text-xs text-amber-600 font-bold flex items-center gap-1.5 animate-pulse">
@@ -361,27 +412,43 @@ export default function BatchQRPrintModal({
           {filteredSiswa.length === 0 ? (
             <div className="bg-white rounded-2xl p-8 text-center border border-dashed border-slate-300 text-slate-500">
               <p className="font-bold text-sm">Tidak ada data siswa ditemukan untuk filter ini.</p>
-              <p className="text-xs mt-1">Coba ubah pilihan filter kelas atau kata kunci pencarian Anda.</p>
+              <p className="text-xs mt-1">Coba ubah pilihan filter kelas, status Dapodik, atau kata kunci pencarian Anda.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               {filteredSiswa.map((siswa) => {
-                const qrUrl = qrMap[siswa.nis];
+                const qrUrl = qrMap[siswa.id || siswa.nis];
+                const isBelumDapodik = siswa.statusDapodik === 'Belum Dapodik';
+                const qrCodeIdentifier = getStudentQRIdentifier(siswa);
+
                 return (
                   <div
                     key={siswa.id || siswa.nis}
-                    className="bg-white rounded-2xl p-4 border-2 border-indigo-600/80 shadow-sm hover:shadow-md transition-all flex flex-col items-center text-center relative group"
+                    className={`bg-white rounded-2xl p-4 border-2 shadow-sm hover:shadow-md transition-all flex flex-col items-center text-center relative group ${
+                      isBelumDapodik ? 'border-amber-500/80 bg-amber-50/20' : 'border-indigo-600/80'
+                    }`}
                   >
-                    <div className="w-full bg-indigo-600 text-white font-black text-[10px] py-1 px-2 rounded-lg uppercase tracking-wider mb-2">
-                      KARTU SISWA • SDN 3 KARAMATWANGI
+                    <div className={`w-full text-white font-black text-[10px] py-1 px-2 rounded-lg uppercase tracking-wider mb-2 flex items-center justify-between ${
+                      isBelumDapodik ? 'bg-amber-600' : 'bg-indigo-600'
+                    }`}>
+                      <span>KARTU SISWA • SDN 3</span>
+                      {isBelumDapodik ? (
+                        <span className="bg-white text-amber-800 text-[8px] px-1.5 py-0.5 rounded font-mono font-bold">
+                          NIK QR
+                        </span>
+                      ) : (
+                        <span className="bg-white/20 text-white text-[8px] px-1.5 py-0.5 rounded font-mono">
+                          DAPODIK
+                        </span>
+                      )}
                     </div>
 
                     {/* QR Code preview image */}
-                    <div className="my-2 bg-slate-50 p-2 rounded-xl border border-slate-200 flex items-center justify-center min-h-[140px] w-full">
+                    <div className="my-2 bg-white p-2 rounded-xl border border-slate-200 flex items-center justify-center min-h-[140px] w-full shadow-inner">
                       {qrUrl ? (
                         <img
                           src={qrUrl}
-                          alt={`QR Code NIS ${siswa.nis}`}
+                          alt={`QR Code ${qrCodeIdentifier}`}
                           className="w-32 h-32 object-contain rounded-md"
                         />
                       ) : (
@@ -394,15 +461,28 @@ export default function BatchQRPrintModal({
                     <h4 className="font-extrabold text-sm text-slate-800 uppercase tracking-tight line-clamp-1">
                       {siswa.nama}
                     </h4>
-                    <p className="text-[11px] font-bold text-indigo-700 font-mono mt-0.5">
-                      NIS: {siswa.nis} • <b>{siswa.kelas}</b>
-                    </p>
+                    
+                    <div className="mt-1 space-y-0.5">
+                      {isBelumDapodik ? (
+                        <div className="text-[11px] font-bold text-amber-700 font-mono">
+                          NIK: <span className="underline">{siswa.nik || qrCodeIdentifier}</span>
+                        </div>
+                      ) : (
+                        <div className="text-[11px] font-bold text-indigo-700 font-mono">
+                          NIS: {siswa.nis}
+                        </div>
+                      )}
+                      <span className="text-[10px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full inline-block">
+                        {siswa.kelas}
+                      </span>
+                    </div>
+
                     <p className="text-[10px] text-slate-500 mt-1">
-                      📞 WA Wali: {siswa.waOrangTua || '-'}
+                      📞 WA: {siswa.waOrangTua || '-'}
                     </p>
 
                     <div className="w-full border-t border-dashed border-slate-200 mt-3 pt-1 text-[9px] text-slate-400 font-semibold">
-                      Digiwangi 3 Presensi • Cisurupan, Garut
+                      {isBelumDapodik ? '⚠️ Terdaftar via NIK • Belum Dapodik' : 'Digiwangi 3 Presensi • Cisurupan, Garut'}
                     </div>
                   </div>
                 );
@@ -414,7 +494,7 @@ export default function BatchQRPrintModal({
         {/* Modal Footer */}
         <div className="bg-white border-t border-slate-200 p-4 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
           <p className="text-xs text-slate-500 text-center sm:text-left">
-            💡 <b>Petunjuk Cetak:</b> Kartu dirancang berukuran pas untuk A4 (2 kolom). Siapkan kertas art carton / kover lalu potong sesuai garis batas kartu.
+            💡 <b>Petunjuk Cetak:</b> Kartu dirancang berukuran standar (2 kolom di kertas A4). QR Code untuk siswa yang belum masuk Dapodik otomatis disetel menggunakan <b>NIK</b>.
           </p>
           <div className="flex items-center gap-2">
             <button

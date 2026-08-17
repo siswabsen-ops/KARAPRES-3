@@ -33,12 +33,19 @@ export default function Header({
           {/* Logo DIGIWANGI 3 (Official Emblem) */}
           <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center p-1 shadow-md border border-blue-200 shrink-0 overflow-hidden transform hover:scale-105 transition-all duration-300 cursor-pointer" title="Logo Resmi DIGIWANGI 3">
             <img 
-              src={DIGIWANGI_LOGO_BASE64} 
+              src={digiwangiLogo || '/logo.png'} 
               alt="Logo DIGIWANGI 3" 
               referrerPolicy="no-referrer"
               loading="eager"
               decoding="sync"
-              onError={(e) => { (e.currentTarget as HTMLImageElement).src = digiwangiLogo; }}
+              onError={(e) => { 
+                const target = e.currentTarget as HTMLImageElement;
+                if (target.src !== '/logo.png') {
+                  target.src = '/logo.png';
+                } else {
+                  target.src = DIGIWANGI_LOGO_BASE64;
+                }
+              }}
               className="w-full h-full object-contain"
             />
           </div>

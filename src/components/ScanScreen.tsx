@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Camera, Search, UserCheck, AlertTriangle, Clock, Smartphone, MessageCircle, RefreshCw, Star } from 'lucide-react';
-import { Siswa, Presensi, SystemSettings, StatusKehadiran } from '../types';
+import { Siswa, Presensi, SystemSettings, StatusKehadiran, findStudentByCode, getStudentQRIdentifier } from '../types';
 import QRCodeRenderer from './QRCodeRenderer';
 // @ts-ignore
 import jsQR from 'jsqr';
@@ -54,9 +54,11 @@ export default function ScanScreen({
     }
   }, [useCamera, cameraStream]);
 
+  const lastScannedMapRef = useRef<{ [code: string]: number }>({});
+
   // Real-time loop to auto-capture frames from key video and decode with jsQR
   useEffect(() => {
-    if (!useCamera || !cameraStream || scannerStatus !== 'SCANNING') return;
+    if (!useCamera || !cameraStream) return;
 
     let active = true;
     let animFrameId: number;
@@ -68,12 +70,12 @@ export default function ScanScreen({
       if (!active) return;
 
       const nowTime = Date.now();
-      if (nowTime - lastScanTime > 150) {
+      if (nowTime - lastScanTime > 120) {
         lastScanTime = nowTime;
 
         if (videoRef.current && videoRef.current.readyState === videoRef.current.HAVE_ENOUGH_DATA) {
           const video = videoRef.current;
-          // Downsample block: using smaller and standard sizes for jsQR makes processing lightning fast
+          // Downsample block: using standard sizes for jsQR makes processing lightning fast
           const width = 480;
           const height = 360;
           canvas.width = width;
@@ -89,12 +91,14 @@ export default function ScanScreen({
               });
 
               if (code && code.data) {
-                const decodedNis = code.data.trim();
-                if (decodedNis) {
-                  // Successfully decoded! Complete scan
-                  active = false;
-                  handleScanIdentify(decodedNis);
-                  return;
+                const decodedCode = code.data.trim();
+                if (decodedCode) {
+                  const lastScanned = lastScannedMapRef.current[decodedCode] || 0;
+                  // Cooldown of 2 seconds for the exact same student to prevent accidental duplicate triggers, but 0ms for different students
+                  if (nowTime - lastScanned > 2000) {
+                    lastScannedMapRef.current[decodedCode] = nowTime;
+                    handleScanIdentify(decodedCode);
+                  }
                 }
               }
             } catch (e) {
@@ -119,7 +123,7 @@ export default function ScanScreen({
         cancelAnimationFrame(animFrameId);
       }
     };
-  }, [useCamera, cameraStream, scannerStatus]);
+  }, [useCamera, cameraStream]);
 
   // Turn on/off real browser camera
   const toggleCamera = async () => {
@@ -142,15 +146,14 @@ export default function ScanScreen({
       } catch (err) {
         console.warn('Webcam access was restricted, fallback to simulator webcam stream', err);
         setErrorMsg('Webcam asli terbatasi (atau dijalankan di sandbox). Kami mensimulasikan feed kamera sekolah dengan laser target.');
-        // Don't crash, keep stream state false but let UI look like scanner is active for demo experience
       }
     }
   };
 
-  // Main attendance logging function
-  const handleScanIdentify = (nis: string, customStatus?: StatusKehadiran) => {
+  // Main attendance logging function (Rapid & Non-blocking)
+  const handleScanIdentify = (code: string, customStatus?: StatusKehadiran) => {
     setErrorMsg('');
-    const matchedSiswa = siswaList.find((s) => s.nis === nis.trim());
+    const matchedSiswa = findStudentByCode(siswaList, code);
     
     if (scanTimeoutRef.current) {
       clearTimeout(scanTimeoutRef.current);
@@ -158,12 +161,12 @@ export default function ScanScreen({
 
     if (!matchedSiswa) {
       setScannerStatus('ERROR');
-      setErrorMsg(`Siswa dengan NIS ${nis} tidak ditemukan.`);
-      // Auto reset status back to SCANNING after 2 seconds
+      setErrorMsg(`QR Code / ID [${code}] belum terdaftar di sistem SDN 3.`);
+      // Auto reset status back to SCANNING after 1.5 seconds
       scanTimeoutRef.current = setTimeout(() => {
         setScannerStatus('SCANNING');
         setErrorMsg('');
-      }, 200);
+      }, 1500);
       return;
     }
 
@@ -192,12 +195,12 @@ export default function ScanScreen({
 
     // Check if pupil already scanned today to avoid annoying double triggers
     const alreadyScanned = recentPresensi.find(
-      (p) => p.nis === matchedSiswa.nis && p.tanggal === todayDate
+      (p) => (p.siswaId === matchedSiswa.id || p.nis === matchedSiswa.nis) && p.tanggal === todayDate
     );
 
     if (alreadyScanned && !customStatus) {
-      // Allow overriding but warn
-      setErrorMsg(`Perhatian: ${matchedSiswa.nama} sudah tercatat presensi hari ini pukul ${alreadyScanned.waktu.slice(0,5)}.`);
+      // Allow overriding but warn softly
+      setErrorMsg(`Info: ${matchedSiswa.nama} sudah tercatat presensi hari ini pukul ${alreadyScanned.waktu.slice(0,5)}.`);
     }
 
     const newPresensiId = `pr-${Date.now()}`;
@@ -205,6 +208,7 @@ export default function ScanScreen({
       id: newPresensiId,
       siswaId: matchedSiswa.id,
       nis: matchedSiswa.nis,
+      nik: matchedSiswa.nik,
       nama: matchedSiswa.nama,
       kelas: matchedSiswa.kelas,
       tanggal: todayDate,
@@ -219,7 +223,7 @@ export default function ScanScreen({
     setScannedResult(newRecord);
     setScannerStatus('SUCCESS');
 
-    // Beeps or play sound for immersive scan feel
+    // Beeps or play sound for instant scan confirmation
     try {
       const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
       const oscillator = audioCtx.createOscillator();
@@ -227,20 +231,19 @@ export default function ScanScreen({
       oscillator.connect(gainNode);
       gainNode.connect(audioCtx.destination);
       oscillator.type = 'sine';
-      oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); // High pitch beep
-      gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+      oscillator.frequency.setValueAtTime(950, audioCtx.currentTime); // High pleasant chirp
+      gainNode.gain.setValueAtTime(0.12, audioCtx.currentTime);
       oscillator.start();
-      oscillator.stop(audioCtx.currentTime + 0.15);
+      oscillator.stop(audioCtx.currentTime + 0.12);
     } catch (e) {
-      // Browser blocks audio until interaction, ignore
+      // Audio autoplay policy fallback
     }
 
-    // Auto clear scanned HUD banner and resume scanning automatically after 0.8 seconds (Fast Mass Attendance)
+    // Auto clear toast after 2.5 seconds without interrupting ongoing scanning
     scanTimeoutRef.current = setTimeout(() => {
       setScannerStatus('SCANNING');
       setScannedResult(null);
-      setErrorMsg('');
-    }, 1200);
+    }, 2500);
   };
 
   const handleNisSubmit = (e: React.FormEvent) => {
@@ -254,9 +257,10 @@ export default function ScanScreen({
   // Direct mock scan via clicking student cards
   const handleVirtualScan = (siswa: Siswa, forcedStatus?: StatusKehadiran) => {
     setScannerStatus('SCANNING');
+    const qrIdentifier = getStudentQRIdentifier(siswa);
     setTimeout(() => {
-      handleScanIdentify(siswa.nis, forcedStatus);
-    }, 500); // Quick split-second visual laser delay
+      handleScanIdentify(qrIdentifier, forcedStatus);
+    }, 400); // Quick split-second visual laser delay
   };
 
   return (
@@ -376,7 +380,11 @@ export default function ScanScreen({
                     </div>
                     <h4 className="text-sm font-black text-white truncate mt-0.5">{scannedResult.nama}</h4>
                     <div className="flex items-center gap-2 text-[10px] text-slate-300">
-                      <span className="font-mono font-bold text-slate-200">NIS: {scannedResult.nis} ({scannedResult.kelas})</span>
+                      <span className="font-mono font-bold text-slate-200">
+                        {scannedResult.nik && (!scannedResult.nis || scannedResult.nis.startsWith('REG-') || scannedResult.nis.startsWith('NON-')) 
+                          ? `NIK: ${scannedResult.nik}` 
+                          : `NIS: ${scannedResult.nis}`} ({scannedResult.kelas})
+                      </span>
                       <span className="text-emerald-400 font-medium truncate">
                         • 📡 WA: {scannedResult.pesanTerkirim?.match(/\(([^)]+)\)/)?.[1] || '087844651559 (Terkirim)'}
                       </span>
@@ -452,7 +460,7 @@ export default function ScanScreen({
                   type="text"
                   value={nisInput}
                   onChange={(e) => setNisInput(e.target.value)}
-                  placeholder="Ketik NIS Siswa di sini"
+                  placeholder="Ketik NIS, NISN, atau NIK Siswa..."
                   className="w-full bg-white border border-gray-300 rounded-xl py-2 px-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-700 font-mono font-medium"
                 />
               </div>
